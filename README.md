@@ -13,6 +13,7 @@ PRs are really welcome!
 
 - [ ] Ability to change the PIN
 - [ ] Card attachments
+- [ ] Windows/Mac version
 - [ ] Polish UI expecially intro pages!
 - [ ] Any hints?
 
