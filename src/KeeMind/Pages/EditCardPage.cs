@@ -122,7 +122,7 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
     {
         return new Grid("108", "64 * 48 64")
         {
-            Theme.Current.ImageButton("icons/back_white.png")
+            Theme.Current.ImageButton("back_white.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
@@ -133,14 +133,14 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
                 .VCenter()
                 .HCenter(),
 
-            Theme.Current.ImageButton(State.Card.IsFavorite ? "icons/favorites_white_fill.png" : "icons/favorites_white.png")
+            Theme.Current.ImageButton(State.Card.IsFavorite ? "favorites_white_fill.png" : "favorites_white.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
                 .GridColumn(2)
                 .OnClicked(()=> Task.Run(ToggleFavorite)),
 
-            Theme.Current.ImageButton("icons/edit_white.png")
+            Theme.Current.ImageButton("edit_white.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
@@ -169,7 +169,7 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
     {
         return new Grid("108", "64 * 64")
         {
-            Theme.Current.ImageButton("icons/close_white.png")
+            Theme.Current.ImageButton("close_white.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
@@ -195,7 +195,7 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
                 .HCenter()
                 .OnLoaded(()=> _titleEntryRef?.Focus()),
 
-            Theme.Current.ImageButton("icons/confirm_accent.png")
+            Theme.Current.ImageButton("confirm_accent.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
