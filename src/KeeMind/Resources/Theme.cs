@@ -36,6 +36,7 @@ namespace KeeMind.Resources
             .TextColor(WhiteColor)
             .BackgroundColor(BlackColor)
             .CornerRadius(0)
+            .BorderWidth(0)
             ;
 
         public Button ToggleButton(string text, bool selected) => new Button()
@@ -45,6 +46,7 @@ namespace KeeMind.Resources
             .BorderWidth(1)
             .BorderColor(BlackColor)
             .CornerRadius(0)
+            .BorderWidth(0)
             ;
 
         public Button TransparentButton(string text) => new Button()
@@ -52,17 +54,20 @@ namespace KeeMind.Resources
             .TextColor(WhiteColor)
             .BackgroundColor(Colors.Transparent)
             .CornerRadius(0)
+            .BorderWidth(0)
             ;
 
         public ImageButton ImageButton(string imageSource) => new ImageButton()
             .Source(imageSource)
             .BackgroundColor(WhiteColor)
+            .BorderWidth(0)
             ;
 
         public ImageButton ImageButton(Func<string> imageSource) 
             => new ImageButton()
                 .Source(imageSource)
                 .BackgroundColor(WhiteColor)
+                .BorderWidth(0)
                 ;
 
         public Label Label(string text) => new Label()

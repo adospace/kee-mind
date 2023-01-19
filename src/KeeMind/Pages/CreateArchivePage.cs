@@ -78,7 +78,8 @@ class CreateArchivePage : Component<CreateArchivePageState>
         return new VerticalStackLayout
         {
             new Image("logox.png")
-                .Margin(0,0,0,50),
+                .Margin(0,0,0,50)
+                .Aspect(Aspect.Center),
 
             Theme.Current.Label("Save your secretes, no account, no internet, no ads, export anytime!")
                 .TextColor(Theme.Current.WhiteColor)
@@ -101,6 +102,7 @@ class CreateArchivePage : Component<CreateArchivePageState>
             new VerticalStackLayout
             {
                 new Image("logo.png")
+                    .Aspect(Aspect.Center)
                     .Margin(0,30,0,0),
 
                 Theme.Current.H1("Local Archive")
@@ -122,7 +124,8 @@ class CreateArchivePage : Component<CreateArchivePageState>
         {
             new VStack(spacing:15)
             {
-                new Image("logox.png"),
+                new Image("logox.png")
+                    .Aspect(Aspect.Center),
 
                 Theme.Current.Label("your password manager")
                     .TextColor(Theme.Current.WhiteColor)

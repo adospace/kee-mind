@@ -45,6 +45,9 @@ namespace KeeMind.Controls.Native
                         handler.PlatformView.PerformSelector(new ObjCRuntime.Selector("selectAll"), null, 0.0f);
                     };
 #elif WINDOWS
+                    handler.PlatformView.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
+                    handler.PlatformView.Background = null;
+                    
                     handler.PlatformView.GotFocus += (s, e) =>
                     {
                         handler.PlatformView.SelectAll();
