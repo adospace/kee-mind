@@ -159,7 +159,7 @@ class CardsPage : Component<CardsPageState>
     {
         return new Grid("64", "64 * 64")
         {
-            Theme.Current.ImageButton("icons/menu_black.png")
+            Theme.Current.ImageButton("menu_black.png")
                 .Aspect(Aspect.Center)
                 .OnClicked(_openFlyoutAction),
 
@@ -167,7 +167,7 @@ class CardsPage : Component<CardsPageState>
                 .TextColor(Theme.Current.BlackColor)
                 .GridColumn(1).VCenter().HCenter(),
 
-            Theme.Current.ImageButton("icons/plus_black.png")
+            Theme.Current.ImageButton("plus_black.png")
                 .Aspect(Aspect.Center)
                 .OnClicked(OnAddCard)
                 .GridColumn(2),

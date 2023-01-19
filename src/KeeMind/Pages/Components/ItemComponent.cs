@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using KeeMind.Services;
+using Microsoft.Maui.Devices;
 
 namespace KeeMind.Pages.Components;
 
@@ -77,11 +78,13 @@ class ItemComponent : Component<ItemComponentState>
                         {
                             _item.EditMode = EditMode.Modified;
                         }
-                    }),
+                    })
+                    .When(DeviceInfo.Current.Platform == DevicePlatform.iOS || DeviceInfo.Platform == DevicePlatform.MacCatalyst, _=>_.Margin(0,5))
+                    ,
 
                 new Grid("*", "Auto,*")
                 {
-                    Theme.Current.ImageButton(_item.IsMasked ? "icons/lock_close.png" : "icons/lock_open.png")
+                    Theme.Current.ImageButton(_item.IsMasked ? "lock_close.png" : "lock_open.png")
                         .Aspect(Aspect.Center)
                         .OnClicked(() =>
                         {
@@ -115,7 +118,7 @@ class ItemComponent : Component<ItemComponentState>
             }
                 .Margin(16, 0),
 
-            Theme.Current.ImageButton("icons/delete_black.png")
+            Theme.Current.ImageButton("delete_black.png")
                 .Aspect(Aspect.Center)
                 .OnClicked(_onDeleteAction)
                 .GridColumn(1)
@@ -144,7 +147,7 @@ class ItemComponent : Component<ItemComponentState>
                     .FontAttributes(MauiControls.FontAttributes.Bold)
                     ,
 
-                Theme.Current.ImageButton(() => State.ShowMaskedValue ? "icons/eye_open.png" : "icons/eye_close.png")
+                Theme.Current.ImageButton(() => State.ShowMaskedValue ? "eye_open.png" : "eye_close.png")
                     .Aspect(Aspect.Center)
                     .OnClicked(()=>SetState(s => s.ShowMaskedValue = !s.ShowMaskedValue, invalidateComponent: false))
                     .GridColumn(1)

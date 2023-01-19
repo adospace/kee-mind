@@ -94,7 +94,7 @@ class MainPage : Component<MainPageState>
         {
             new Grid("64 128 * 62", "*")
             {
-                Theme.Current.ImageButton("icons/close_white.png")
+                Theme.Current.ImageButton("close_white.png")
                     .Aspect(Aspect.Center)
                     .HStart()
                     .WidthRequest(64)
@@ -105,7 +105,7 @@ class MainPage : Component<MainPageState>
                 {
                     new Grid("*", "20,*")
                     {
-                        new Image("icons/home_white.png")
+                        new Image("home_white.png")
                             .HCenter(),
 
                         Theme.Current.H3("All Cards")
@@ -127,7 +127,7 @@ class MainPage : Component<MainPageState>
 
                     new Grid("*", "20,*")
                     {
-                        new Image("icons/favorites_white.png")
+                        new Image("favorites_white.png")
                             .HCenter(),
 
                         Theme.Current.H3("Favorites")
@@ -164,7 +164,7 @@ class MainPage : Component<MainPageState>
 
                 new Grid("*", "20,*")
                 {
-                    new Image("icons/gear_white.png")
+                    new Image("gear_white.png")
                         .HCenter(),
 
                     Theme.Current.H3("Settings")

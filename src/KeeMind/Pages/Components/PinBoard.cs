@@ -101,6 +101,7 @@ class PinBoard : Component<PinBoardState>
             Theme.Current.ImageButton("cancel_white.png")
                 .Padding(12)
                 .HeightRequest(72)
+                .Aspect(Aspect.Center)
                 .GridRow(3)
                 .GridColumn(2)
                 .BackgroundColor(Theme.Current.BlackColor)
