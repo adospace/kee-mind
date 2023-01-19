@@ -115,6 +115,7 @@ class ItemComponent : Component<ItemComponentState>
                         })
                         .GridColumn(1),
                 }
+
             }
                 .Margin(16, 0),
 

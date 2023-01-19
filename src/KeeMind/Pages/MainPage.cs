@@ -121,12 +121,14 @@ class MainPage : Component<MainPageState>
 
             new VStack(spacing:24)
             {
+
                 new Grid("*", "20,*")
                 {
                     new Image("home_white.png")
                         .HCenter(),
 
                     Theme.Current.H3("All Cards")
+
                         .GridColumn(1)
                         .VCenter()
                         .Margin(12,0,0,0)

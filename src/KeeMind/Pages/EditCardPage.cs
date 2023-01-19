@@ -44,6 +44,7 @@ class EditEntryPageProps
 }
 
 class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
+
 {
     private MauiControls.Entry? _titleEntryRef;
 
@@ -122,6 +123,7 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
     public override VisualNode Render()
     {
+
         if (Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone)
         {
             return new ContentPage
@@ -149,7 +151,9 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
             RenderItems(),
 
+
             RenderTags(),
+
 
             State.IsEditing && Props.CardId != null ?
             RenderBottomCommands() : null
@@ -160,7 +164,9 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
     {
         return new Grid("108", "64 * 48 64")
         {
+
             Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone ?
+
             Theme.Current.ImageButton("back_white.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)

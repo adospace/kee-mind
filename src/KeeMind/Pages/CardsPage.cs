@@ -11,7 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using MauiReactor;
 using MauiReactor.Internals;
-
 namespace KeeMind.Pages;
 
 class CardsPageState
@@ -21,6 +20,7 @@ class CardsPageState
 
 class CardsPage : Component<CardsPageState>
 {
+
     Action? _openFlyoutAction;
     Func<Action<EditEntryPageProps>, Task>? _addOrEditCardAction;
 
@@ -28,6 +28,7 @@ class CardsPage : Component<CardsPageState>
     {
         _openFlyoutAction = openFlyoutAction;
         return this;
+
     }
 
     public CardsPage OnAddOrEditCard(Func<Action<EditEntryPageProps>, Task>? addOrEditCardAction)
@@ -252,6 +253,7 @@ class CardsPage : Component<CardsPageState>
 
         if (Navigation == null)
             return;
+
 
         Validate.EnsureNotNull(_addOrEditCardAction);
         var cardsViewParameters = GetParameter<CardsViewParameters>();
