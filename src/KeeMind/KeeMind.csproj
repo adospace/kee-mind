@@ -49,8 +49,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Reactor.Maui" Version="1.0.97-beta" />
-    <PackageReference Include="Reactor.Maui.ScaffoldGenerator" Version="1.0.76-beta" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <PackageReference Include="Reactor.Maui" Version="1.0.98-beta" />
+    <PackageReference Include="Reactor.Maui.ScaffoldGenerator" Version="1.0.98-beta" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
   
 	<ItemGroup>

@@ -44,8 +44,18 @@ class EditEntryPageProps
 }
 
 class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
+
 {
     private MauiControls.Entry? _titleEntryRef;
+
+    public EditCardPage()
+    { }
+
+    public EditCardPage(EditEntryPageProps props)
+        :base(props: props)
+    { 
+    
+    }
 
     protected override void OnMounted()
     {
@@ -60,13 +70,31 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             State.IsEditing = true;
         }
 
+#if ANDROID
         if (MauiControls.Application.Current?.Dispatcher != null)
         {
             State.EntranceTransitionX = 400;
             MauiControls.Application.Current.Dispatcher.Dispatch(() => SetState(s => s.EntranceTransitionX = 0));
         }
-
+#endif
         base.OnMounted();
+    }
+
+    protected override void OnPropsChanged()
+    {
+        if (Props.CardId != null)
+        {
+            Task.Run(LoadCard);
+        }
+        else
+        {
+            State.Card = new Card { Name = string.Empty, EditMode = EditMode.New };
+            State.Card.Items.Add(new Item { Card = State.Card, Label = "Email", Value = "" });
+            State.Card.Items.Add(new Item { Card = State.Card, Label = "Password", Value = "", IsMasked = true });
+            State.IsEditing = true;
+        }
+
+        base.OnPropsChanged();
     }
 
     async Task LoadCard()
@@ -95,38 +123,56 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
     public override VisualNode Render()
     {
-        return new ContentPage
+
+        if (Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone)
         {
-            new Grid("108, *, 24, Auto, Auto", "*")
+            return new ContentPage
             {
-                State.IsEditing ?
-                RenderEditingTop()
-                :
-                RenderTop(),
-
-                RenderItems(),
-
-                RenderTags(),
-
-                State.IsEditing && Props.CardId != null ?
-                RenderBottomCommands() : null
+                RenderBody()
             }
+            .TranslationX(State.EntranceTransitionX)
+            .WithAnimation(duration: 200)
+            .Set(MauiControls.NavigationPage.HasNavigationBarProperty, false);
         }
-        .TranslationX(State.EntranceTransitionX)
-        .WithAnimation(duration: 200)
-        .Set(MauiControls.NavigationPage.HasNavigationBarProperty, false);
+        else
+        {
+            return RenderBody();
+        }
     }
 
+    private VisualNode RenderBody()
+    {
+        return new Grid("108, *, 24, Auto, Auto", "*")
+        {
+            State.IsEditing ?
+            RenderEditingTop()
+            :
+            RenderTop(),
+
+            RenderItems(),
+
+
+            RenderTags(),
+
+
+            State.IsEditing && Props.CardId != null ?
+            RenderBottomCommands() : null
+        };
+    }
 
     VisualNode RenderTop()
     {
         return new Grid("108", "64 * 48 64")
         {
+
+            Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone ?
+
             Theme.Current.ImageButton("back_white.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
-                .OnClicked(OnBack),
+                .OnClicked(OnBack)
+                :null,
 
             Theme.Current.H3(State.Card.Name ?? string.Empty)
                 .GridColumn(1)

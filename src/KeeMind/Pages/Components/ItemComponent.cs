@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using KeeMind.Services;
+using Microsoft.Maui.Devices;
 
 namespace KeeMind.Pages.Components;
 
@@ -77,7 +78,9 @@ class ItemComponent : Component<ItemComponentState>
                         {
                             _item.EditMode = EditMode.Modified;
                         }
-                    }),
+                    })
+                    .When(DeviceInfo.Current.Platform == DevicePlatform.iOS || DeviceInfo.Platform == DevicePlatform.MacCatalyst, _=>_.Margin(0,5))
+                    ,
 
                 new Grid("*", "Auto,*")
                 {
@@ -112,6 +115,7 @@ class ItemComponent : Component<ItemComponentState>
                         })
                         .GridColumn(1),
                 }
+
             }
                 .Margin(16, 0),
 

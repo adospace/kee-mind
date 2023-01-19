@@ -79,8 +79,12 @@ class PinBoard : Component<PinBoardState>
             .Spacing(20)
             ,
 
+
+
+
             RenderKeyboard().GridRow(1)
-        };
+        }
+        .MaximumWidthRequest(480);
     }
 
     Grid RenderKeyboard()
@@ -101,6 +105,7 @@ class PinBoard : Component<PinBoardState>
             Theme.Current.ImageButton("cancel_white.png")
                 .Padding(12)
                 .HeightRequest(72)
+                .Aspect(Aspect.Center)
                 .GridRow(3)
                 .GridColumn(2)
                 .BackgroundColor(Theme.Current.BlackColor)

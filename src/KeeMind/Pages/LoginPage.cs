@@ -42,7 +42,8 @@ class LoginPage : Component<LoginPageState>
         {
             new VStack(spacing:15)
             {
-                new Image("logox.png"),
+                new Image("logox.png")
+                    .Aspect(Aspect.Center),
 
                 State.LoggingIn ?
                 Theme.Current.Label("your password manager")

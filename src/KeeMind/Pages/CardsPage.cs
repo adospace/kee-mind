@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using MauiReactor;
-
+using MauiReactor.Internals;
 namespace KeeMind.Pages;
 
 class CardsPageState
@@ -20,37 +20,59 @@ class CardsPageState
 
 class CardsPage : Component<CardsPageState>
 {
+
     Action? _openFlyoutAction;
+    Func<Action<EditEntryPageProps>, Task>? _addOrEditCardAction;
 
     public CardsPage OnOpenFlyout(Action? openFlyoutAction)
     {
         _openFlyoutAction = openFlyoutAction;
         return this;
+
+    }
+
+    public CardsPage OnAddOrEditCard(Func<Action<EditEntryPageProps>, Task>? addOrEditCardAction)
+    {
+        _addOrEditCardAction = addOrEditCardAction;
+        return this;
     }
 
     public override VisualNode Render()
     {
-        return new ContentPage
+        if (Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone)
         {
-            new Grid("64 Auto *", "*")
+            return new ContentPage
             {
-                RenderTop(),
-
-                RenderTagFilters(),
-
-                RenderEntryList(),
-
-                new ActivityIndicator()
-                    .GridRowSpan(3)
-                    .IsRunning(State.IsLoading)
-                    .HCenter()
-                    .VCenter()
-                    .BackgroundColor(Theme.Current.WhiteColor)
-                    .Color(Theme.Current.BlackColor)
+                RenderBody()
             }
+            .Set(MauiControls.NavigationPage.HasNavigationBarProperty, false);
         }
-        .Set(MauiControls.NavigationPage.HasNavigationBarProperty, false);
+        else
+        {
+            return RenderBody();
+        }
     }
+
+    private VisualNode RenderBody()
+    {
+        return new Grid("64 Auto *", "*")
+        {
+            RenderTop(),
+
+            RenderTagFilters(),
+
+            RenderEntryList(),
+
+            new ActivityIndicator()
+                .GridRowSpan(3)
+                .IsRunning(State.IsLoading)
+                .HCenter()
+                .VCenter()
+                .BackgroundColor(Theme.Current.WhiteColor)
+                .Color(Theme.Current.BlackColor)
+        };
+    }
+
 
     private VisualNode RenderEntryList()
     {
@@ -92,6 +114,7 @@ class CardsPage : Component<CardsPageState>
 
             new Image("right_black.png")
                 .GridColumn(2)
+                .Aspect(Aspect.Center)
                 .VCenter()
                 .HCenter()
         }
@@ -159,9 +182,11 @@ class CardsPage : Component<CardsPageState>
     {
         return new Grid("64", "64 * 64")
         {
+            Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone ?
             Theme.Current.ImageButton("menu_black.png")
                 .Aspect(Aspect.Center)
-                .OnClicked(_openFlyoutAction),
+                .OnClicked(_openFlyoutAction)
+                : null,
 
             Theme.Current.H1("Cards")
                 .TextColor(Theme.Current.BlackColor)
@@ -179,14 +204,36 @@ class CardsPage : Component<CardsPageState>
         if (Navigation == null)
             return;
 
-        await Navigation.PushAsync<EditCardPage, EditEntryPageProps>(props =>
+        Validate.EnsureNotNull(_addOrEditCardAction);
+        
+        var cardsViewParameters = GetParameter<CardsViewParameters>();
+
+        await _addOrEditCardAction.Invoke(props =>
         {
-            props.OnCardAdded = OnCardAdded;
-            props.OnCardRemoved = OnCardRemoved;
+            props.OnCardAdded = (Card cardModel) => 
+            {
+                cardsViewParameters.Set(p =>
+                {
+                    p.Cards.Add(new IndexedModel<Card>(cardModel, p.Cards.Count));
+                    p.Cards = p.Cards.OrderBy(_=>_.Model.Name).ToList();
+
+                    for (int i = 0; i < p.Cards.Count; i++)
+                    {
+                        p.Cards[i].Index = i;
+                    }
+                }, invalidateComponent: false);
+            };
+            props.OnCardRemoved = (Card removedCard) => 
+            {
+                cardsViewParameters.Set(p =>
+                {
+                    var indexOfModifiedCard = p.Cards.FindIndex(_ => _.Model.Id == removedCard.Id);
+                    p.Cards.RemoveAt(indexOfModifiedCard);
+                }, invalidateComponent: false);
+            };
             props.OnClose = () =>
             {
-                var cardsViewParameters = GetParameter<CardsViewParameters>();
-                cardsViewParameters.Set(p => 
+                cardsViewParameters.Set(p =>
                 {
                     p.AllTags = new SortedDictionary<int, Tag>(
                         p.Cards
@@ -207,11 +254,30 @@ class CardsPage : Component<CardsPageState>
         if (Navigation == null)
             return;
 
-        await Navigation.PushAsync<EditCardPage, EditEntryPageProps>(props =>
+
+        Validate.EnsureNotNull(_addOrEditCardAction);
+        var cardsViewParameters = GetParameter<CardsViewParameters>();
+
+        await _addOrEditCardAction.Invoke(props =>
         {
             props.CardId = cardModel.Model.Id;
-            props.OnCardModified = OnCardModified;
-            props.OnCardRemoved = OnCardRemoved;
+            props.OnCardModified = (Card editedCard) =>
+            { 
+                cardsViewParameters.Set(p =>
+                {
+                    var indexOfModifiedCard = p.Cards.FindIndex(_ => _.Model.Id == editedCard.Id);
+                    p.Cards[indexOfModifiedCard] =
+                        new IndexedModel<Card>(editedCard, p.Cards[indexOfModifiedCard].Index);
+                }, invalidateComponent:  false);            
+            };
+            props.OnCardRemoved = (Card removedCard)=> 
+            {
+                cardsViewParameters.Set(p =>
+                {
+                    var indexOfModifiedCard = p.Cards.FindIndex(_ => _.Model.Id == removedCard.Id);
+                    p.Cards.RemoveAt(indexOfModifiedCard);
+                }, invalidateComponent: false);            
+            };
             props.OnClose = () =>
             {
                 var cardsViewParameters = GetParameter<CardsViewParameters>();
@@ -227,42 +293,5 @@ class CardsPage : Component<CardsPageState>
             };
         });
     }
-
-    void OnCardModified(Card editedCard)
-    {
-        var cardsViewParameters = GetParameter<CardsViewParameters>();
-        cardsViewParameters.Set(p =>
-        {
-            var indexOfModifiedCard = p.Cards.FindIndex(_ => _.Model.Id == editedCard.Id);
-            p.Cards[indexOfModifiedCard] =
-                new IndexedModel<Card>(editedCard, p.Cards[indexOfModifiedCard].Index);
-        }, invalidateComponent:  false);
-    }
-
-    void OnCardAdded(Card cardModel)
-    {
-        var cardsViewParameters = GetParameter<CardsViewParameters>();
-        cardsViewParameters.Set(p =>
-        {
-            p.Cards.Add(new IndexedModel<Card>(cardModel, p.Cards.Count));
-            p.Cards = p.Cards.OrderBy(_=>_.Model.Name).ToList();
-
-            for (int i = 0; i < p.Cards.Count; i++)
-            {
-                p.Cards[i].Index = i;
-            }
-        }, invalidateComponent: false);
-    }
-
-    void OnCardRemoved(Card editedCard)
-    {
-        var cardsViewParameters = GetParameter<CardsViewParameters>();
-        cardsViewParameters.Set(p =>
-        {
-            var indexOfModifiedCard = p.Cards.FindIndex(_ => _.Model.Id == editedCard.Id);
-            p.Cards.RemoveAt(indexOfModifiedCard);
-        }, invalidateComponent: false);
-    }
-
 }
 

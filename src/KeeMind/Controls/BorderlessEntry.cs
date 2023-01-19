@@ -10,6 +10,10 @@ namespace KeeMind.Controls.Native
 {
     public class BorderlessEntry : MauiControls.Entry
     {
+        public BorderlessEntry()
+        {
+        }
+
         public static void Configure()
         {
             Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("BorderlessEntry", (handler, view) =>
@@ -34,11 +38,16 @@ namespace KeeMind.Controls.Native
 
 
 #elif IOS || MACCATALYST
+                    handler.PlatformView.BackgroundColor = UIKit.UIColor.Clear;
+                    handler.PlatformView.BorderStyle = UIKit.UITextBorderStyle.None;
                     handler.PlatformView.EditingDidBegin += (s, e) =>
                     {
                         handler.PlatformView.PerformSelector(new ObjCRuntime.Selector("selectAll"), null, 0.0f);
                     };
 #elif WINDOWS
+                    handler.PlatformView.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
+                    handler.PlatformView.Background = null;
+                    
                     handler.PlatformView.GotFocus += (s, e) =>
                     {
                         handler.PlatformView.SelectAll();
