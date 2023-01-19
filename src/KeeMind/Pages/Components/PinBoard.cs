@@ -79,8 +79,12 @@ class PinBoard : Component<PinBoardState>
             .Spacing(20)
             ,
 
+
+
+
             RenderKeyboard().GridRow(1)
-        };
+        }
+        .MaximumWidthRequest(480);
     }
 
     Grid RenderKeyboard()
