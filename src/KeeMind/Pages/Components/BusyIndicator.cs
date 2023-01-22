@@ -17,6 +17,7 @@ class BusyIndicatorState
 
 class BusyIndicator : Component<BusyIndicatorState>
 {
+    #region Render
     public override VisualNode Render()
     {
         return new HStack(spacing: 5)
@@ -64,4 +65,5 @@ class BusyIndicator : Component<BusyIndicatorState>
         .HCenter()
         .VCenter();
     }
+    #endregion
 }

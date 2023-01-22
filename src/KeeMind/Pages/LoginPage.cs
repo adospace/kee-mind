@@ -19,6 +19,7 @@ class LoginPageState
 
 class LoginPage : Component<LoginPageState>
 {
+    #region Initialization
     private Action<List<IndexedModel<Card>>>? _loggedInAction;
 
     public LoginPage OnLoggedIn(Action<List<IndexedModel<Card>>> loggedInAction)
@@ -26,17 +27,20 @@ class LoginPage : Component<LoginPageState>
         _loggedInAction = loggedInAction;
         return this;
     }
+    #endregion
 
+    #region Render
     public override VisualNode Render()
     {
         return new ContentPage
         {
             RenderBody()
         }
+        .WindowTitle("KeeMind")
         .BackgroundColor(Theme.Current.BlackColor);
     }
 
-    private VisualNode RenderBody()
+    VisualNode RenderBody()
     {
         return new Grid("* Auto", "*")
         {
@@ -69,8 +73,10 @@ class LoginPage : Component<LoginPageState>
                 .GridRowSpan(2)
         };
     }
+    #endregion
 
-    private async Task OnPinEntered(string pin)
+    #region Render
+    async Task OnPinEntered(string pin)
     {
         var repository = Services.GetRequiredService<IRepository>();
         var db = await repository.TryOpenArchive(pin);
@@ -101,4 +107,5 @@ class LoginPage : Component<LoginPageState>
             SetState(s => s.LoggingIn = false);
         }
     }
+    #endregion
 }

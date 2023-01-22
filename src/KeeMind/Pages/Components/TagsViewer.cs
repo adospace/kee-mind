@@ -7,6 +7,7 @@ namespace KeeMind.Pages.Components;
 
 class TagsViewer : Component
 {
+    #region Initialization
     Card? _card;
 
     public TagsViewer Card(Card card)
@@ -14,7 +15,9 @@ class TagsViewer : Component
         _card = card;
         return this;
     }
+    #endregion
 
+    #region Render
     public override VisualNode Render()
     {
         return new ScrollView
@@ -29,7 +32,7 @@ class TagsViewer : Component
         .Orientation(ScrollOrientation.Horizontal);
     }
 
-    private VisualNode RenderTagItem(TagEntry tag)
+    VisualNode RenderTagItem(TagEntry tag)
     {
         return new Label(tag.Tag.Name.ToUpper())
             .BackgroundColor(Theme.Current.BlackColor)
@@ -39,4 +42,5 @@ class TagsViewer : Component
             .Padding(12,0)
             ;
     }
+    #endregion
 }

@@ -8,13 +8,9 @@ using System.Threading.Tasks;
 
 namespace KeeMind.Pages;
 
-class HomePageState
+class HomePage : Component
 {
-}
-
-
-class HomePage : Component<HomePageState>
-{
+    #region Initialization
     Action? _openFlyoutAction;
     private MauiControls.NavigationPage? _navigationPage;
 
@@ -23,8 +19,9 @@ class HomePage : Component<HomePageState>
         _openFlyoutAction = openFlyoutAction;
         return this;
     }
+    #endregion
 
-
+    #region Render
     public override VisualNode Render()
     {
         return new NavigationPage(navigationPage => _navigationPage = navigationPage)
@@ -36,7 +33,9 @@ class HomePage : Component<HomePageState>
         
         .BackgroundColor(Theme.Current.WhiteColor);
     }
+    #endregion
 
+    #region Events
     private async Task OnAddOrEditCard(Action<EditEntryPageProps> actionToGetProps)
     {
         if (_navigationPage == null)
@@ -49,4 +48,5 @@ class HomePage : Component<HomePageState>
             actionToGetProps(props);
         });
     }
+    #endregion
 }

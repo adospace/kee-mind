@@ -15,6 +15,7 @@ class PinBoardState
 
 class PinBoard : Component<PinBoardState>
 {
+    #region Initialization
     private string? _label;
     private Action<string>? _onPinEnteredAction;
 
@@ -30,7 +31,9 @@ class PinBoard : Component<PinBoardState>
         _onPinEnteredAction = onPinEnteredAction;
         return this;
     }
+    #endregion
 
+    #region Render
     public override VisualNode Render()
     {
         return new Grid("Auto,*", "*")
@@ -79,9 +82,6 @@ class PinBoard : Component<PinBoardState>
             .Spacing(20)
             ,
 
-
-
-
             RenderKeyboard().GridRow(1)
         }
         .MaximumWidthRequest(480);
@@ -125,7 +125,9 @@ class PinBoard : Component<PinBoardState>
             .GridColumn(col)
             .OnClicked(() => NumberEntered(v));
     }
+    #endregion
 
+    #region Events
     void NumberEntered(string number)
     {
         State.PIN += number;
@@ -138,4 +140,5 @@ class PinBoard : Component<PinBoardState>
 
         Invalidate();
     }
+    #endregion
 }

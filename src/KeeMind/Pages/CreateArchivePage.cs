@@ -33,6 +33,7 @@ class CreateArchivePageState
 
 class CreateArchivePage : Component<CreateArchivePageState>
 {
+    #region Initialization
     bool _isLocal;
     Action? _archiveCreatedAction;
 
@@ -47,13 +48,16 @@ class CreateArchivePage : Component<CreateArchivePageState>
         _archiveCreatedAction = action;
         return this;
     }
+    #endregion
 
+    #region Render
     public override VisualNode Render()
     {
         return new ContentPage
         {
             RenderBody()
         }
+        .WindowTitle("KeeMind")
         .BackgroundColor(Theme.Current.BlackColor);
     }
 
@@ -136,7 +140,9 @@ class CreateArchivePage : Component<CreateArchivePageState>
             new BusyIndicator()
         };
     }
+    #endregion
 
+    #region Events
     async Task OnPinEntered(string pin)
     {
         if (State.CurrentStep == CreateArchiveStep.Pin)
@@ -176,4 +182,5 @@ class CreateArchivePage : Component<CreateArchivePageState>
 
         _archiveCreatedAction?.Invoke();
     }
+    #endregion
 }

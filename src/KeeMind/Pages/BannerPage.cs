@@ -4,44 +4,43 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KeeMind.Pages
-{
-    //internal class BannerPage : Component
-    //{
-    //    public override VisualNode Render()
-    //    {
-    //        return new ContentPage
-    //        {
-    //            new CarouselView
-    //            { 
-    //                Page1(),
+namespace KeeMind.Pages;
 
-    //                Page2(),
+//internal class BannerPage : Component
+//{
+//    public override VisualNode Render()
+//    {
+//        return new ContentPage
+//        {
+//            new CarouselView
+//            { 
+//                Page1(),
 
-    //                Page3()
-    //            }
-    //        };
-    //    }
+//                Page2(),
 
-    //    private VisualNode Page1()
-    //    {
-    //        return new Label("Page1")
-    //            .VCenter()
-    //            .HCenter();
-    //    }
+//                Page3()
+//            }
+//        };
+//    }
 
-    //    private VisualNode Page2()
-    //    {
-    //        return new Label("Page2")
-    //            .VCenter()
-    //            .HCenter();
-    //    }
+//    private VisualNode Page1()
+//    {
+//        return new Label("Page1")
+//            .VCenter()
+//            .HCenter();
+//    }
 
-    //    private VisualNode Page3()
-    //    {
-    //        return new Label("Page3")
-    //            .VCenter()
-    //            .HCenter();
-    //    }
-    //}
-}
+//    private VisualNode Page2()
+//    {
+//        return new Label("Page2")
+//            .VCenter()
+//            .HCenter();
+//    }
+
+//    private VisualNode Page3()
+//    {
+//        return new Label("Page3")
+//            .VCenter()
+//            .HCenter();
+//    }
+//}

@@ -30,7 +30,7 @@ class MainPageState
     public EditEntryPageProps? CurrentEditCardPros { get; set; }
 }
 
-class CardsViewParameters
+class MainParameters
 {
     public List<IndexedModel<Card>> Cards { get; set; } = new();
 
@@ -39,15 +39,31 @@ class CardsViewParameters
     public SortedDictionary<int, Tag> AllTags { get; set; } = new();
 
     public bool ShowFavoritesOnly { get; set; }
+
+    public void RefreshAllTags()
+    {
+        for (int i = 0; i < Cards.Count; i++)
+        {
+            Cards[i].Index = i;
+        }
+
+        AllTags = new SortedDictionary<int, Tag>(
+            Cards
+            .SelectMany(_ => _.Model.Tags)
+            .Select(_ => _.Tag)
+            .GroupBy(_ => _.Id)
+            .ToDictionary(_ => _.Key, _ => _.First()));
+    }
 }
 
 class MainPage : Component<MainPageState>
 {
-    private readonly IParameter<CardsViewParameters> _cardsViewParameter;
+    #region Initialization
+    private readonly IParameter<MainParameters> _cardsViewParameter;
 
     public MainPage()
     {
-        _cardsViewParameter = CreateParameter<CardsViewParameters>();
+        _cardsViewParameter = CreateParameter<MainParameters>();
     }
 
     protected override void OnMounted()
@@ -72,7 +88,9 @@ class MainPage : Component<MainPageState>
         MainActivity.SetWindowTheme(State.CurrentPage == PageEnum.Login || State.CurrentPage == PageEnum.CreateLocalArchive ? false : true);
 #endif
     }
+    #endregion
 
+    #region Render
     public override VisualNode Render()
     {
         if (Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone)
@@ -85,7 +103,7 @@ class MainPage : Component<MainPageState>
         }
     }
 
-    private VisualNode RenderMobileLayout()
+    VisualNode RenderMobileLayout()
     {
         return new FlyoutPage
         {
@@ -103,7 +121,7 @@ class MainPage : Component<MainPageState>
         ;
     }
 
-    private VisualNode RenderFlyoutBody()
+    VisualNode RenderFlyoutBody()
     {
         return new Grid("64 128 * 62", "*")
         {
@@ -121,7 +139,6 @@ class MainPage : Component<MainPageState>
 
             new VStack(spacing:24)
             {
-
                 new Grid("*", "20,*")
                 {
                     new Image("home_white.png")
@@ -200,7 +217,7 @@ class MainPage : Component<MainPageState>
         .BackgroundColor(Theme.Current.BlackColor);
     }
 
-    private VisualNode RenderFlayoutTagItem(KeyValuePair<int, Tag> tagItem)
+    VisualNode RenderFlayoutTagItem(KeyValuePair<int, Tag> tagItem)
     {
         return Theme.Current.Button(tagItem.Value.Name.ToUpper())
             .BackgroundColor(Theme.Current.AccentColor)
@@ -215,7 +232,7 @@ class MainPage : Component<MainPageState>
             });
     }
 
-    private VisualNode RenderBody()
+    VisualNode RenderBody()
     {
         switch (State.CurrentPage)
         {
@@ -230,7 +247,7 @@ class MainPage : Component<MainPageState>
         throw new InvalidOperationException();
     }
 
-    private VisualNode RenderCreateLocalArchive()
+    VisualNode RenderCreateLocalArchive()
     {
         return new CreateArchivePage()
             .IsLocal(true)
@@ -242,7 +259,7 @@ class MainPage : Component<MainPageState>
         
     }
 
-    private VisualNode RenderHomePage()
+    VisualNode RenderHomePage()
     {
         if (Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone)
         {
@@ -266,25 +283,12 @@ class MainPage : Component<MainPageState>
                         .GridColumn(2)
                     :null,
                 }
-            };
+            }
+            .WindowTitle("KeeMind");
         }
     }
 
-    private Task OnAddOrEditCard(Action<EditEntryPageProps> actionToGetProps)
-    {
-        var currentEditCardProps = new EditEntryPageProps();
-
-        actionToGetProps(currentEditCardProps);
-
-        SetState(s =>
-        {
-            s.CurrentEditCardPros = currentEditCardProps;
-        });
-
-        return Task.CompletedTask;
-    }
-
-    private VisualNode RenderLoginPage()
+    VisualNode RenderLoginPage()
     {
         return new LoginPage()
             .OnLoggedIn(cardList => SetState(s =>
@@ -304,4 +308,33 @@ class MainPage : Component<MainPageState>
                 UpdateStatusBarAppereance();
             }));
     }
+    #endregion
+
+    #region Events
+    Task OnAddOrEditCard(Action<EditEntryPageProps> actionToGetProps)
+    {
+        var currentEditCardProps = new EditEntryPageProps();
+
+        actionToGetProps(currentEditCardProps);
+
+        currentEditCardProps.OnEditCanceled = (card) =>
+        {
+            if (card.EditMode == EditMode.New ||
+                card.EditMode == EditMode.Deleted)
+            {
+                SetState(s =>
+                {
+                    s.CurrentEditCardPros = null;
+                });
+            }
+        };
+
+        SetState(s =>
+        {
+            s.CurrentEditCardPros = currentEditCardProps;
+        });
+
+        return Task.CompletedTask;
+    }
+    #endregion
 }

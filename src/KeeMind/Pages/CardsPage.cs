@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using MauiReactor;
 using MauiReactor.Internals;
+
 namespace KeeMind.Pages;
 
 class CardsPageState
@@ -20,7 +21,7 @@ class CardsPageState
 
 class CardsPage : Component<CardsPageState>
 {
-
+    #region Initialization
     Action? _openFlyoutAction;
     Func<Action<EditEntryPageProps>, Task>? _addOrEditCardAction;
 
@@ -36,7 +37,9 @@ class CardsPage : Component<CardsPageState>
         _addOrEditCardAction = addOrEditCardAction;
         return this;
     }
+    #endregion
 
+    #region Render
     public override VisualNode Render()
     {
         if (Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone)
@@ -53,7 +56,7 @@ class CardsPage : Component<CardsPageState>
         }
     }
 
-    private VisualNode RenderBody()
+    VisualNode RenderBody()
     {
         return new Grid("64 Auto *", "*")
         {
@@ -68,15 +71,14 @@ class CardsPage : Component<CardsPageState>
                 .IsRunning(State.IsLoading)
                 .HCenter()
                 .VCenter()
-                .BackgroundColor(Theme.Current.WhiteColor)
+                .BackgroundColor(Colors.Transparent)
                 .Color(Theme.Current.BlackColor)
         };
     }
 
-
-    private VisualNode RenderEntryList()
+    VisualNode RenderEntryList()
     {
-        var cardsViewParameters = GetParameter<CardsViewParameters>();
+        var cardsViewParameters = GetParameter<MainParameters>();
 
         var cards = cardsViewParameters.Value.FilterTags.Count > 0 ?
             cardsViewParameters.Value.Cards.Where(_ => _.Model.Tags.Any(x => cardsViewParameters.Value.FilterTags.ContainsKey(x.Tag.Id)))
@@ -122,7 +124,7 @@ class CardsPage : Component<CardsPageState>
         .OnTapped(()=>OnEditCard(cardModel));
     }
 
-    private VisualNode RenderTag(TagEntry tag)
+    VisualNode RenderTag(TagEntry tag)
     {
         return Theme.Current.Button(tag.Tag.Name.ToUpper())
             .BackgroundColor(Theme.Current.BlackColor)
@@ -131,9 +133,9 @@ class CardsPage : Component<CardsPageState>
             .Padding(12, 0);
     }
 
-    private VisualNode RenderTagFilters()
+    VisualNode RenderTagFilters()
     {
-        var cardsViewParameters = GetParameter<CardsViewParameters>();
+        var cardsViewParameters = GetParameter<MainParameters>();
         return new ScrollView
         {
             new HStack(spacing: 5)
@@ -146,9 +148,14 @@ class CardsPage : Component<CardsPageState>
         .GridRow(1);
     }
 
-    private VisualNode RenderFilteredTagItem(KeyValuePair<int, Tag> tag)
+    VisualNode RenderFilteredTagItem(KeyValuePair<int, Tag> tag)
     {
-        var cardsViewParameters = GetParameter<CardsViewParameters>();
+        void RemoveTag()
+        {
+            var cardsViewParameters = GetParameter<MainParameters>();
+            cardsViewParameters.Set(p => p.FilterTags.Remove(tag.Key));
+        };
+
         return new Grid("Auto", "Auto, Auto, *")
         {
             Theme.Current.Button(string.Empty)
@@ -156,10 +163,7 @@ class CardsPage : Component<CardsPageState>
                 .VFill()
                 .FontSize(12)
                 .Padding(2)
-                .OnClicked(()=>
-                {
-                    cardsViewParameters.Set(p => p.FilterTags.Remove(tag.Key));
-                })
+                .OnClicked(RemoveTag)
                 .BackgroundColor(Theme.Current.DarkGrayColor)
                 .GridColumnSpan(3),
 
@@ -167,6 +171,7 @@ class CardsPage : Component<CardsPageState>
                 .VCenter()
                 .HCenter()
                 .Margin(5,0,0,0)
+                .OnTapped(RemoveTag)
                 .WidthRequest(10),
 
             Theme.Current.Label(tag.Value.Name.ToUpper())
@@ -174,11 +179,12 @@ class CardsPage : Component<CardsPageState>
                 .FontSize(12)
                 .Margin(5,0)
                 .TextColor(Theme.Current.WhiteColor)
+                .OnTapped(RemoveTag)
                 .GridColumn(1),
         };
     }
 
-    private VisualNode RenderTop()
+    VisualNode RenderTop()
     {
         return new Grid("64", "64 * 64")
         {
@@ -198,7 +204,9 @@ class CardsPage : Component<CardsPageState>
                 .GridColumn(2),
         };
     }
+    #endregion
 
+    #region Events
     async void OnAddCard()
     {
         if (Navigation == null)
@@ -206,7 +214,7 @@ class CardsPage : Component<CardsPageState>
 
         Validate.EnsureNotNull(_addOrEditCardAction);
         
-        var cardsViewParameters = GetParameter<CardsViewParameters>();
+        var cardsViewParameters = GetParameter<MainParameters>();
 
         await _addOrEditCardAction.Invoke(props =>
         {
@@ -217,11 +225,9 @@ class CardsPage : Component<CardsPageState>
                     p.Cards.Add(new IndexedModel<Card>(cardModel, p.Cards.Count));
                     p.Cards = p.Cards.OrderBy(_=>_.Model.Name).ToList();
 
-                    for (int i = 0; i < p.Cards.Count; i++)
-                    {
-                        p.Cards[i].Index = i;
-                    }
-                }, invalidateComponent: false);
+                    p.RefreshAllTags();
+
+                });
             };
             props.OnCardRemoved = (Card removedCard) => 
             {
@@ -229,19 +235,14 @@ class CardsPage : Component<CardsPageState>
                 {
                     var indexOfModifiedCard = p.Cards.FindIndex(_ => _.Model.Id == removedCard.Id);
                     p.Cards.RemoveAt(indexOfModifiedCard);
-                }, invalidateComponent: false);
+
+                    p.RefreshAllTags();
+
+                });
             };
             props.OnClose = () =>
             {
-                cardsViewParameters.Set(p =>
-                {
-                    p.AllTags = new SortedDictionary<int, Tag>(
-                        p.Cards
-                        .SelectMany(_ => _.Model.Tags)
-                        .Select(_ => _.Tag)
-                        .GroupBy(_ => _.Id)
-                        .ToDictionary(_ => _.Key, _ => _.First()));
-                }, invalidateComponent: true);
+                Invalidate();
             };
         });
     }
@@ -256,7 +257,7 @@ class CardsPage : Component<CardsPageState>
 
 
         Validate.EnsureNotNull(_addOrEditCardAction);
-        var cardsViewParameters = GetParameter<CardsViewParameters>();
+        var cardsViewParameters = GetParameter<MainParameters>();
 
         await _addOrEditCardAction.Invoke(props =>
         {
@@ -268,7 +269,10 @@ class CardsPage : Component<CardsPageState>
                     var indexOfModifiedCard = p.Cards.FindIndex(_ => _.Model.Id == editedCard.Id);
                     p.Cards[indexOfModifiedCard] =
                         new IndexedModel<Card>(editedCard, p.Cards[indexOfModifiedCard].Index);
-                }, invalidateComponent:  false);            
+
+                    p.RefreshAllTags();
+
+                });            
             };
             props.OnCardRemoved = (Card removedCard)=> 
             {
@@ -276,22 +280,17 @@ class CardsPage : Component<CardsPageState>
                 {
                     var indexOfModifiedCard = p.Cards.FindIndex(_ => _.Model.Id == removedCard.Id);
                     p.Cards.RemoveAt(indexOfModifiedCard);
-                }, invalidateComponent: false);            
+
+                    p.RefreshAllTags();
+
+                });            
             };
             props.OnClose = () =>
             {
-                var cardsViewParameters = GetParameter<CardsViewParameters>();
-                cardsViewParameters.Set(p =>
-                {
-                    p.AllTags = new SortedDictionary<int, Tag>(
-                        p.Cards
-                        .SelectMany(_ => _.Model.Tags)
-                        .Select(_ => _.Tag)
-                        .GroupBy(_ => _.Id)
-                        .ToDictionary(_ => _.Key, _ => _.First()));
-                }, invalidateComponent: true);
+                Invalidate();
             };
         });
     }
+    #endregion
 }
 

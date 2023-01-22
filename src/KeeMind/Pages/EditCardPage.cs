@@ -36,7 +36,7 @@ class EditEntryPageProps
 
     public Action<Card>? OnCardModified;
 
-    //public Action<Card>? OnEditCanceled;
+    public Action<Card>? OnEditCanceled;
 
     public Action<Card>? OnCardRemoved;
 
@@ -44,8 +44,8 @@ class EditEntryPageProps
 }
 
 class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
-
 {
+    #region Initialization
     private MauiControls.Entry? _titleEntryRef;
 
     public EditCardPage()
@@ -59,16 +59,7 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
     protected override void OnMounted()
     {
-        if (Props.CardId != null)
-        {
-            Task.Run(LoadCard);
-        }
-        else
-        {
-            State.Card.Items.Add(new Item { Card = State.Card, Label = "Email", Value = "" });
-            State.Card.Items.Add(new Item { Card = State.Card, Label = "Password", Value = "", IsMasked = true });
-            State.IsEditing = true;
-        }
+        InitializeState();
 
 #if ANDROID
         if (MauiControls.Application.Current?.Dispatcher != null)
@@ -77,10 +68,17 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             MauiControls.Application.Current.Dispatcher.Dispatch(() => SetState(s => s.EntranceTransitionX = 0));
         }
 #endif
+
         base.OnMounted();
     }
 
     protected override void OnPropsChanged()
+    {
+        InitializeState();
+        base.OnPropsChanged();
+    }
+
+    void InitializeState()
     {
         if (Props.CardId != null)
         {
@@ -93,8 +91,6 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             State.Card.Items.Add(new Item { Card = State.Card, Label = "Password", Value = "", IsMasked = true });
             State.IsEditing = true;
         }
-
-        base.OnPropsChanged();
     }
 
     async Task LoadCard()
@@ -120,11 +116,12 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             s.IsLoading = false;
         });
     }
+    #endregion
 
+    #region Render
     public override VisualNode Render()
     {
-
-        if (Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone)
+        if (DeviceInfo.Idiom == DeviceIdiom.Phone)
         {
             return new ContentPage
             {
@@ -140,7 +137,7 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
         }
     }
 
-    private VisualNode RenderBody()
+    VisualNode RenderBody()
     {
         return new Grid("108, *, 24, Auto, Auto", "*")
         {
@@ -184,7 +181,7 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
                 .GridColumn(2)
-                .OnClicked(()=> Task.Run(ToggleFavorite)),
+                .OnClicked(ToggleFavorite),
 
             Theme.Current.ImageButton("edit_white.png")
                 .Aspect(Aspect.Center)
@@ -194,21 +191,6 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
                 .OnClicked(()=>SetState(s => s.IsEditing = true)),
         }
         .BackgroundColor(Theme.Current.BlackColor);
-    }
-
-    private async Task ToggleFavorite()
-    {
-        var repository = Services.GetRequiredService<IRepository>();
-        await using var db = repository.OpenArchive();
-
-        State.Card.IsFavorite = !State.Card.IsFavorite;
-        db.Cards.Update(State.Card);
-
-        await db.SaveChangesAsync();
-
-        Props.OnCardModified?.Invoke(State.Card);
-
-        Invalidate();
     }
 
     VisualNode RenderEditingTop()
@@ -328,18 +310,22 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
                 .VCenter()
                 .HCenter()
                 .Margin(18,0)
+                .OnTapped(OnRemoveCard)
                 .WidthRequest(20),
 
             Theme.Current.Label("Delete")
                 .VCenter()
                 .TextColor(Theme.Current.WhiteColor)
+                .OnTapped(OnRemoveCard)
                 .GridColumn(1),
         }
         .GridRow(4)
         ;
     }
+    #endregion
 
-    private void OnDeleteItem(Item item)
+    #region Events
+    void OnDeleteItem(Item item)
     {
         item.EditMode = EditMode.Deleted;
         Invalidate();
@@ -348,6 +334,21 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
     void OnAddItem()
     {
         State.Card.Items.Add(new Item() { Card = State.Card, Label = string.Empty, Value = string.Empty, EditMode = EditMode.New });
+        Invalidate();
+    }
+
+    async void ToggleFavorite()
+    {
+        var repository = Services.GetRequiredService<IRepository>();
+        await using var db = repository.OpenArchive();
+
+        State.Card.IsFavorite = !State.Card.IsFavorite;
+        db.Cards.Update(State.Card);
+
+        await db.SaveChangesAsync();
+
+        Props.OnCardModified?.Invoke(State.Card);
+
         Invalidate();
     }
 
@@ -482,7 +483,7 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
         async Task ClosePage()
         {
-            //Props.OnEditCanceled?.Invoke(State.Card);
+            Props.OnEditCanceled?.Invoke(State.Card);
 
             State.IsClosing = true;
 
@@ -507,7 +508,7 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
         if (!await ContainerPage.DisplayAlert(
             title: Props.CardId == null ? "Undo Card Creation" : "Cancel Editing", 
-            message: Props.CardId == null ? "Are you sure you want to cancel the new card?" : "Are you sure you want to cancel any modifications?", 
+            message: Props.CardId == null ? "Are you sure you want to not add the new card?" : "Are you sure you want to cancel any modifications?", 
             accept: "Cancel", 
             cancel: Props.CardId == null ? "Back to New Card" : "Back To Edit Card"))
         {
@@ -543,7 +544,11 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
         async Task ClosePage()
         {
+            State.Card.EditMode = EditMode.Deleted;
+
             Props.OnCardRemoved?.Invoke(State.Card);
+            
+            Props.OnEditCanceled?.Invoke(State.Card);
 
             State.IsClosing = true;
 
@@ -555,7 +560,7 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
         if (!await ContainerPage.DisplayAlert(
             title: "Delete Card",
             message: "Are you sure you want to delete the card?",
-            accept: "Remove",
+            accept: "Delete",
             cancel: "Back"))
         {
             return;
@@ -596,4 +601,5 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
         await Navigation.PopAsync();        
     }
+    #endregion
 }

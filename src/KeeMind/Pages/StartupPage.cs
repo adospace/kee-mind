@@ -6,19 +6,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KeeMind.Pages
-{
-    class StartupPage : Component
-    {
+namespace KeeMind.Pages;
 
-        public override VisualNode Render()
-        {
-            return new ContentPage
-            {
-                new ActivityIndicator()
-                    .VCenter()
-                    .HCenter()
-            };
-        }
-    }
-}
+//class StartupPage : Component
+//{
+//    public override VisualNode Render()
+//    {
+//        return new ContentPage
+//        {
+//            new ActivityIndicator()
+//                .VCenter()
+//                .HCenter()
+//        };
+//    }
+//}

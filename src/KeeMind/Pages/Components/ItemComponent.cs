@@ -20,6 +20,7 @@ class ItemComponentState
 
 class ItemComponent : Component<ItemComponentState>
 {
+    #region Initialization
     private Item? _item;
     private bool _isEditing = false;
     private Action? _onDeleteAction;
@@ -41,7 +42,9 @@ class ItemComponent : Component<ItemComponentState>
         _onDeleteAction = onDeleteAction;
         return this;
     }
+    #endregion
 
+    #region Render
     public override VisualNode Render()
     {
         if (_item == null)
@@ -162,4 +165,5 @@ class ItemComponent : Component<ItemComponentState>
                 .BackgroundColor(Theme.Current.LightGrayColor)
         };
     }
+    #endregion
 }
