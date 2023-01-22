@@ -40,7 +40,7 @@ class PinBoard : Component<PinBoardState>
         {
             new VerticalStackLayout
             {
-                Theme.Current.H2(_label ?? string.Empty) //
+                Theme.Current.H2(_label ?? string.Empty)
                     .HCenter(),
 
                 new FlexLayout
@@ -79,12 +79,13 @@ class PinBoard : Component<PinBoardState>
             }
             .VEnd()
             .Margin(60)
-            .Spacing(20)
-            ,
+            .Spacing(20),
 
-            RenderKeyboard().GridRow(1)
+            RenderKeyboard()
+                .GridRow(1)
         }
-        .MaximumWidthRequest(480);
+        .When(Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Desktop, _=>
+            _.WidthRequest(480)); //MaxWidthRequest not working under Mac
     }
 
     Grid RenderKeyboard()
