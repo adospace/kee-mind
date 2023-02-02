@@ -9,6 +9,8 @@ PRs are really welcome!
 
 ![KeeMind_Preview](/res/KeeMind_Preview.png)
 
+https://user-images.githubusercontent.com/10573253/216276499-e0154a79-470d-4b7a-80b0-1f91fbff9b22.mp4
+
 ## Upcomging features/tasks
 
 - [ ] Ability to change the PIN
