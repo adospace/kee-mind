@@ -85,7 +85,11 @@ class LoginPage : Component<LoginPageState>
             List<IndexedModel<Card>> cardList = new();
             int cardIndex = 0;
 
-            await foreach (var card in db.Cards.Include(_ => _.Tags).ThenInclude(_ => _.Tag).OrderBy(_ => _.Name).AsAsyncEnumerable())
+            await foreach (var card in db.Cards
+                .Include(_ => _.Tags)
+                .ThenInclude(_ => _.Tag)
+                .OrderBy(_ => _.Name)
+                .AsAsyncEnumerable())
             {
                 cardList.Add(new IndexedModel<Card>(card, cardIndex));
                 cardIndex++;

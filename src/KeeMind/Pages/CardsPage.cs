@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using MauiReactor;
 using MauiReactor.Internals;
+using System.Collections.ObjectModel;
 
 namespace KeeMind.Pages;
 
@@ -80,20 +81,13 @@ class CardsPage : Component<CardsPageState>
     {
         var cardsViewParameters = GetParameter<MainParameters>();
 
-        var cards = cardsViewParameters.Value.FilterTags.Count > 0 ?
-            cardsViewParameters.Value.Cards.Where(_ => _.Model.Tags.Any(x => cardsViewParameters.Value.FilterTags.ContainsKey(x.Tag.Id)))
-            :
-            cardsViewParameters.Value.Cards;
-
-        if (cardsViewParameters.Value.ShowFavoritesOnly)
-        {
-            cards = cards.Where(_ => _.Model.IsFavorite);
-        }
-
-        System.Diagnostics.Debug.WriteLine($"RenderEntryList()");
-
         return new CollectionView()
-            .ItemsSource(cards.ToList(), RenderCardItem)
+#if WINDOWS
+            //Under windows, it seems that CollectionView is not updated when the linked ObservableCollection is modified
+            .ItemsSource(cardsViewParameters.Value.SortedAndFilteredCards.ToArray(), RenderCardItem)
+#else
+            .ItemsSource(cardsViewParameters.Value.SortedAndFilteredCards, RenderCardItem)
+#endif
             .ItemSizingStrategy(MauiControls.ItemSizingStrategy.MeasureFirstItem)
             .GridRow(2);
     }
@@ -153,7 +147,11 @@ class CardsPage : Component<CardsPageState>
         void RemoveTag()
         {
             var cardsViewParameters = GetParameter<MainParameters>();
-            cardsViewParameters.Set(p => p.FilterTags.Remove(tag.Key));
+            cardsViewParameters.Set(p =>
+            {
+                p.FilterTags.Remove(tag.Key);
+                p.Refresh();
+            });
         };
 
         return new Grid("Auto", "Auto, Auto, *")
@@ -204,7 +202,7 @@ class CardsPage : Component<CardsPageState>
                 .GridColumn(2),
         };
     }
-    #endregion
+#endregion
 
     #region Events
     async void OnAddCard()
@@ -218,31 +216,22 @@ class CardsPage : Component<CardsPageState>
 
         await _addOrEditCardAction.Invoke(props =>
         {
-            props.OnCardAdded = (Card cardModel) => 
+            props.OnCardAdded = (Card cardToAdd) => 
             {
                 cardsViewParameters.Set(p =>
                 {
-                    p.Cards.Add(new IndexedModel<Card>(cardModel, p.Cards.Count));
-                    p.Cards = p.Cards.OrderBy(_=>_.Model.Name).ToList();
-
-                    p.RefreshAllTags();
+                    p.Cards.AddCard(cardToAdd);
+                    p.Refresh();
 
                 });
             };
-            props.OnCardRemoved = (Card removedCard) => 
+            props.OnCardRemoved = (Card cardToRemove) => 
             {
                 cardsViewParameters.Set(p =>
                 {
-                    var indexOfModifiedCard = p.Cards.FindIndex(_ => _.Model.Id == removedCard.Id);
-                    p.Cards.RemoveAt(indexOfModifiedCard);
-
-                    p.RefreshAllTags();
-
+                    p.Cards.RemoveCard(cardToRemove.Id);
+                    p.Refresh();
                 });
-            };
-            props.OnClose = () =>
-            {
-                Invalidate();
             };
         });
     }
@@ -262,35 +251,86 @@ class CardsPage : Component<CardsPageState>
         await _addOrEditCardAction.Invoke(props =>
         {
             props.CardId = cardModel.Model.Id;
-            props.OnCardModified = (Card editedCard) =>
+            props.OnCardModified = (Card cardToReplace) =>
             { 
                 cardsViewParameters.Set(p =>
                 {
-                    var indexOfModifiedCard = p.Cards.FindIndex(_ => _.Model.Id == editedCard.Id);
-                    p.Cards[indexOfModifiedCard] =
-                        new IndexedModel<Card>(editedCard, p.Cards[indexOfModifiedCard].Index);
+                    p.Cards.ReplaceCard(cardToReplace);
+                    p.Refresh();
+                });
 
-                    p.RefreshAllTags();
-
-                });            
             };
-            props.OnCardRemoved = (Card removedCard)=> 
+            props.OnCardRemoved = (Card cardToRemove)=> 
             {
                 cardsViewParameters.Set(p =>
                 {
-                    var indexOfModifiedCard = p.Cards.FindIndex(_ => _.Model.Id == removedCard.Id);
-                    p.Cards.RemoveAt(indexOfModifiedCard);
-
-                    p.RefreshAllTags();
-
-                });            
-            };
-            props.OnClose = () =>
-            {
-                Invalidate();
+                    p.Cards.RemoveCard(cardToRemove.Id);
+                    p.Refresh();
+                });
             };
         });
     }
     #endregion
 }
 
+static class CardsListExtensions
+{
+    public static void AddCard(this ObservableCollection<IndexedModel<Card>> list, Card newCard)
+    {
+        bool inserted = false;
+        var newCardModel = new IndexedModel<Card>(newCard, list.Count);
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (string.Compare(list[i].Model.Name, newCard.Name, StringComparison.OrdinalIgnoreCase) > 0)
+            {
+                list.Insert(i, newCardModel);
+                inserted = true;
+                break;
+            }
+        }
+        if (!inserted)
+        {
+            list.Add(newCardModel);
+        }
+    }
+
+    public static void ReplaceCard(this ObservableCollection<IndexedModel<Card>> list, Card editedCard)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i].Model.Id == editedCard.Id)
+            {
+                list.RemoveAt(i);
+                break;
+            }
+        }
+
+        bool inserted = false;
+        var newCardModel = new IndexedModel<Card>(editedCard, list.Count);
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (string.Compare(list[i].Model.Name, newCardModel.Model.Name, StringComparison.OrdinalIgnoreCase) > 0)
+            {
+                list.Insert(i, newCardModel);
+                inserted = true;
+                break;
+            }
+        }
+        if (!inserted)
+        {
+            list.Add(newCardModel);
+        }
+    }
+
+    public static void RemoveCard(this ObservableCollection<IndexedModel<Card>> list, int cardToRemoveId)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i].Model.Id == cardToRemoveId)
+            {
+                list.RemoveAt(i);
+                break;
+            }
+        }
+    }
+}

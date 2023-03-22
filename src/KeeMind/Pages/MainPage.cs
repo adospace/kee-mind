@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MauiReactor;
 using MauiReactor.Parameters;
+using System.Collections.ObjectModel;
 
 namespace KeeMind.Pages;
 
@@ -32,7 +33,9 @@ class MainPageState
 
 class MainParameters
 {
-    public List<IndexedModel<Card>> Cards { get; set; } = new();
+    public ObservableCollection<IndexedModel<Card>> Cards { get; set; } = new();
+
+    public ObservableCollection<IndexedModel<Card>> SortedAndFilteredCards { get; set; } = new();
 
     public SortedDictionary<int, Tag> FilterTags { get; set; } = new();
 
@@ -40,11 +43,31 @@ class MainParameters
 
     public bool ShowFavoritesOnly { get; set; }
 
-    public void RefreshAllTags()
+    public void Refresh()
     {
         for (int i = 0; i < Cards.Count; i++)
         {
             Cards[i].Index = i;
+        }
+
+        while (SortedAndFilteredCards.Count > 0)
+        {
+            SortedAndFilteredCards.RemoveAt(0);
+        }
+
+        var cards = FilterTags.Count > 0 ?
+            Cards.Where(_ => _.Model.Tags.Any(x => FilterTags.ContainsKey(x.Tag.Id)))
+            :
+            Cards;
+
+        if (ShowFavoritesOnly)
+        {
+            cards = cards.Where(_ => _.Model.IsFavorite);
+        }
+
+        foreach (var cardToInsert in cards)
+        {
+            SortedAndFilteredCards.Add(cardToInsert);
         }
 
         AllTags = new SortedDictionary<int, Tag>(
@@ -157,6 +180,7 @@ class MainPage : Component<MainPageState>
                     {
                         p.ShowFavoritesOnly = false;
                         p.FilterTags.Clear();
+                        p.Refresh();
                     });
 
                     s.IsFlyoutOpen = false;
@@ -175,7 +199,11 @@ class MainPage : Component<MainPageState>
                 }
                 .OnTapped(()=> SetState(s =>
                 {
-                    _cardsViewParameter.Set(p => p.ShowFavoritesOnly = true);
+                    _cardsViewParameter.Set(p =>
+                    {
+                        p.ShowFavoritesOnly = true;
+                        p.Refresh();
+                    });
                     s.IsFlyoutOpen = false;
                 })),
             }
@@ -227,7 +255,11 @@ class MainPage : Component<MainPageState>
             .Margin(0, 0, 10, 20)
             .OnClicked(() =>
             {
-                _cardsViewParameter.Set(p => p.FilterTags.Add(tagItem.Key, tagItem.Value));
+                _cardsViewParameter.Set(p =>
+                {
+                    p.FilterTags.Add(tagItem.Key, tagItem.Value);
+                    p.Refresh();
+                });
                 SetState(s => s.IsFlyoutOpen = false);
             });
     }
@@ -296,13 +328,15 @@ class MainPage : Component<MainPageState>
                 s.CurrentPage = PageEnum.Home;
                 _cardsViewParameter.Set(p =>
                 {
-                    p.Cards = cardList;
-                    p.AllTags = new SortedDictionary<int, Tag>(
-                        cardList
-                        .SelectMany(_ => _.Model.Tags)
-                        .Select(_ => _.Tag)
-                        .GroupBy(_ => _.Id)
-                        .ToDictionary(_ => _.Key, _ => _.First()));
+                    p.Cards = new ObservableCollection<IndexedModel<Card>>(cardList);
+                    //p.AllTags = new SortedDictionary<int, Tag>(
+                    //    cardList
+                    //    .SelectMany(_ => _.Model.Tags)
+                    //    .Select(_ => _.Tag)
+                    //    .GroupBy(_ => _.Id)
+                    //    .ToDictionary(_ => _.Key, _ => _.First()));
+
+                    p.Refresh();
                 });
 
                 UpdateStatusBarAppereance();
