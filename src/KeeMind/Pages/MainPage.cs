@@ -105,7 +105,7 @@ class MainPage : Component<MainPageState>
         base.OnMounted();
     }
 
-    private void UpdateStatusBarAppereance()
+    private void UpdateStatusBarAppearance()
     {
 #if ANDROID
         MainActivity.SetWindowTheme(State.CurrentPage == PageEnum.Login || State.CurrentPage == PageEnum.CreateLocalArchive ? false : true);
@@ -140,7 +140,7 @@ class MainPage : Component<MainPageState>
         .IsPresented(() => State.IsFlyoutOpen)
         .OnIsPresentedChanged(isPresented => State.IsFlyoutOpen = isPresented)
         .Set(MauiControls.NavigationPage.HasNavigationBarProperty, false)
-        .OnAppearing(UpdateStatusBarAppereance)
+        .OnAppearing(UpdateStatusBarAppearance)
         ;
     }
 
@@ -220,7 +220,7 @@ class MainPage : Component<MainPageState>
 
                 new FlexLayout
                 {
-                    _cardsViewParameter.Value.AllTags.Select(RenderFlayoutTagItem)
+                    _cardsViewParameter.Value.AllTags.Select(RenderFlyoutTagItem)
                 }
                 .Wrap(Microsoft.Maui.Layouts.FlexWrap.Wrap)
             }
@@ -245,7 +245,7 @@ class MainPage : Component<MainPageState>
         .BackgroundColor(Theme.Current.BlackColor);
     }
 
-    VisualNode RenderFlayoutTagItem(KeyValuePair<int, Tag> tagItem)
+    VisualNode RenderFlyoutTagItem(KeyValuePair<int, Tag> tagItem)
     {
         return Theme.Current.Button(tagItem.Value.Name.ToUpper())
             .BackgroundColor(Theme.Current.AccentColor)
@@ -286,7 +286,7 @@ class MainPage : Component<MainPageState>
             .OnArchiveCreated(() =>
             {
                 SetState(s => s.CurrentPage = PageEnum.Home);
-                UpdateStatusBarAppereance();
+                UpdateStatusBarAppearance();
             });
         
     }
@@ -339,7 +339,7 @@ class MainPage : Component<MainPageState>
                     p.Refresh();
                 });
 
-                UpdateStatusBarAppereance();
+                UpdateStatusBarAppearance();
             }));
     }
     #endregion
