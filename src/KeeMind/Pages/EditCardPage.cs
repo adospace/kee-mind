@@ -128,7 +128,7 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
                 RenderBody()
             }
             .TranslationX(State.EntranceTransitionX)
-            .WithAnimation(duration: 200)
+            .WithAnimation(easing: Easing.CubicOut, duration: 200)
             .Set(MauiControls.NavigationPage.HasNavigationBarProperty, false);
         }
         else
