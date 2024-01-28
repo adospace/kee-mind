@@ -50,9 +50,14 @@
 
   <ItemGroup>
     <PackageReference Include="Reactor.Maui" Version="2.0.*" />
+    <PackageReference Include="ReactorData" Version="1.0.3-beta" />
+    <PackageReference Include="ReactorData.EFCore" Version="1.0.3-beta" />
   </ItemGroup>
   
 	<ItemGroup>
+	  <ProjectReference Include="..\..\..\reactor-data\src\ReactorData.EFCore\ReactorData.EFCore.csproj" />
+	  <ProjectReference Include="..\..\..\reactor-data\src\ReactorData.SourceGenerators\ReactorData.SourceGenerators.csproj"  OutputItemType="Analyzer" ReferenceOutputAssembly="False" />
+	  <ProjectReference Include="..\..\..\reactor-data\src\ReactorData\ReactorData.csproj" />
 	  <ProjectReference Include="..\KeeMind.Services\KeeMind.Services.csproj" />
 	</ItemGroup>
 

@@ -1,8 +1,8 @@
-﻿
-using KeeMind.Pages.Components;
+﻿using KeeMind.Pages.Components;
 using KeeMind.Resources;
 using KeeMind.Services;
 using KeeMind.Services.Data;
+using MauiReactor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;

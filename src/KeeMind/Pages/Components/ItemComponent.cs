@@ -18,31 +18,20 @@ class ItemComponentState
 }
 
 
-class ItemComponent : Component<ItemComponentState>
+partial class ItemComponent : Component<ItemComponentState>
 {
-    #region Initialization
-    private Item? _item;
-    private bool _isEditing = false;
-    private Action? _onDeleteAction;
+    [Prop]
+    Item? _item;
 
-    public ItemComponent Item(Item item)
-    {
-        _item = item;
-        return this;
-    }
+    [Prop] 
+    bool _isEditing = false;
 
-    public ItemComponent IsEditing(bool isEditing)
-    {
-        _isEditing = isEditing;
-        return this;
-    }
+    [Prop]
+    Action? _onDelete;
 
-    public ItemComponent OnDelete(Action onDeleteAction)
-    {
-        _onDeleteAction = onDeleteAction;
-        return this;
-    }
-    #endregion
+    [Prop]
+    Action? _onUpdate;
+
 
     #region Render
     public override VisualNode Render()
@@ -77,10 +66,11 @@ class ItemComponent : Component<ItemComponentState>
                     .OnTextChanged(newValue =>
                     {
                         _item.Label = newValue;
-                        if (_item.EditMode == EditMode.None)
-                        {
-                            _item.EditMode = EditMode.Modified;
-                        }
+                        _onUpdate?.Invoke();
+                        //if (_item.EditMode == EditMode.None)
+                        //{
+                        //    _item.EditMode = EditMode.Modified;
+                        //}
                     })
                     .When(DeviceInfo.Current.Platform == DevicePlatform.iOS || DeviceInfo.Platform == DevicePlatform.MacCatalyst, _=>_.Margin(0,5))
                     ,
@@ -93,10 +83,11 @@ class ItemComponent : Component<ItemComponentState>
                         {
                             _item.IsMasked = !_item.IsMasked;
 
-                            if (_item.EditMode == EditMode.None)
-                            {
-                                _item.EditMode = EditMode.Modified;
-                            }
+                            _onUpdate?.Invoke();
+                            //if (_item.EditMode == EditMode.None)
+                            //{
+                            //    _item.EditMode = EditMode.Modified;
+                            //}
 
                             Invalidate();
                         })
@@ -111,10 +102,11 @@ class ItemComponent : Component<ItemComponentState>
                         .OnTextChanged(newValue =>
                         {
                             _item.Value = newValue;
-                            if (_item.EditMode == EditMode.None)
-                            {
-                                _item.EditMode = EditMode.Modified;
-                            }
+                            _onUpdate?.Invoke();
+                            //if (_item.EditMode == EditMode.None)
+                            //{
+                            //    _item.EditMode = EditMode.Modified;
+                            //}
                         })
                         .GridColumn(1),
                 }
@@ -124,7 +116,7 @@ class ItemComponent : Component<ItemComponentState>
 
             Theme.Current.ImageButton("delete_black.png")
                 .Aspect(Aspect.Center)
-                .OnClicked(_onDeleteAction)
+                .OnClicked(_onDelete)
                 .GridColumn(1)
                 .Margin(16, 0),
 
@@ -162,7 +154,7 @@ class ItemComponent : Component<ItemComponentState>
 
             new Border()
                 .HeightRequest(1)
-                .BackgroundColor(Theme.Current.LightGrayColor)
+                
         };
     }
     #endregion

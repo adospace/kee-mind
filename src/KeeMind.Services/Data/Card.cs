@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ReactorData;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -6,7 +7,8 @@ using System.Threading.Tasks;
 
 namespace KeeMind.Services.Data;
 
-public class Card
+[Model]
+public partial class Card
 {
     public int Id { get; set; }
 
@@ -14,11 +16,11 @@ public class Card
 
     public bool IsFavorite {  get; set; }
 
-    public List<Item> Items { get; } = new();
+    public IList<Item>? Items { get; set;}
 
-    public List<TagEntry> Tags { get; } = new();
+    public IList<TagEntry> Tags { get; } = [];
 
-    public List<Attachment> Attachments { get; } = new();
+    public IList<Attachment>? Attachments { get; set; }
 
     [NotMapped]
     public EditMode EditMode { get; set; }

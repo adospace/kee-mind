@@ -12,33 +12,38 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using MauiReactor;
 using MauiReactor.Internals;
 using System.Collections.ObjectModel;
+using ReactorData;
 
 namespace KeeMind.Pages;
 
 class CardsPageState
 {
     public bool IsLoading { get; set; }
+
+    public IQuery<Card> Cards { get; set; } = default!;
+
 }
 
-class CardsPage : Component<CardsPageState>
+partial class CardsPage : Component<CardsPageState>
 {
-    #region Initialization
-    Action? _openFlyoutAction;
-    Func<Action<EditEntryPageProps>, Task>? _addOrEditCardAction;
+    [Prop]
+    Action? _onOpenFlyout;
 
-    public CardsPage OnOpenFlyout(Action? openFlyoutAction)
+    [Prop]
+    Func<Action<EditEntryPageProps>, Task>? _onAddOrEditCard;
+
+    [Inject]
+    IModelContext _modelContext;
+
+    protected override void OnMounted()
     {
-        _openFlyoutAction = openFlyoutAction;
-        return this;
+        _modelContext.Load<Card>();
+        _modelContext.Load<Tag>();
 
-    }
+        State.Cards = _modelContext.Query<Card>(query => query.OrderBy(_ => _.Name));
 
-    public CardsPage OnAddOrEditCard(Func<Action<EditEntryPageProps>, Task>? addOrEditCardAction)
-    {
-        _addOrEditCardAction = addOrEditCardAction;
-        return this;
+        base.OnMounted();
     }
-    #endregion
 
     #region Render
     public override VisualNode Render()
@@ -58,52 +63,40 @@ class CardsPage : Component<CardsPageState>
     }
 
     VisualNode RenderBody()
-    {
-        return new Grid("64 Auto *", "*")
-        {
+        => Grid("64 Auto *", "*",
             RenderTop(),
 
             RenderTagFilters(),
 
             RenderEntryList(),
 
-            new ActivityIndicator()
+            ActivityIndicator()
                 .GridRowSpan(3)
                 .IsRunning(State.IsLoading)
                 .HCenter()
                 .VCenter()
                 .BackgroundColor(Colors.Transparent)
                 .Color(Theme.Current.BlackColor)
-        };
-    }
+        );
 
     VisualNode RenderEntryList()
-    {
-        var cardsViewParameters = GetParameter<MainParameters>();
-
-        return new CollectionView()
-#if WINDOWS
-            //Under windows, it seems that CollectionView is not updated when the linked ObservableCollection is modified
-            .ItemsSource(cardsViewParameters.Value.SortedAndFilteredCards.ToArray(), RenderCardItem)
-#else
-            .ItemsSource(cardsViewParameters.Value.SortedAndFilteredCards, RenderCardItem)
-#endif
+        => CollectionView()
+            .ItemsSource(State.Cards, RenderCardItem)
             .ItemSizingStrategy(MauiControls.ItemSizingStrategy.MeasureFirstItem)
             .GridRow(2);
-    }
 
-    VisualNode RenderCardItem(IndexedModel<Card> cardModel)
+    VisualNode RenderCardItem(Card cardModel)
     {
-        System.Diagnostics.Debug.WriteLine($"RenderCardItem({cardModel.Index})");
+        //System.Diagnostics.Debug.WriteLine($"RenderCardItem({cardModel.Index})");
         return new Grid("64", "* Auto 42")
         {
-            Theme.Current.Label(cardModel.Model.Name ?? string.Empty)
+            Theme.Current.Label(cardModel.Name ?? string.Empty)
                 .VCenter()
                 .Margin(16,0),
 
             new HStack(spacing: 5)
             {
-                cardModel.Model.Tags.OrderBy(_=>_.Tag.Name).Select(RenderTag)
+                cardModel.Tags.OrderBy(_=>_.Tag.Name).Select(RenderTag)
             }
             .HeightRequest(24)
             .GridColumn(1),
@@ -114,7 +107,7 @@ class CardsPage : Component<CardsPageState>
                 .VCenter()
                 .HCenter()
         }
-        .When(cardModel.Index % 2 == 1, grid => grid.BackgroundColor(Theme.Current.GrayColor))
+        //.When(cardModel.Index % 2 == 1, grid => grid.BackgroundColor(Theme.Current.GrayColor))
         .OnTapped(()=>OnEditCard(cardModel));
     }
 
@@ -189,7 +182,7 @@ class CardsPage : Component<CardsPageState>
             Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone ?
             Theme.Current.ImageButton("menu_black.png")
                 .Aspect(Aspect.Center)
-                .OnClicked(_openFlyoutAction)
+                .OnClicked(_onOpenFlyout)
                 : null,
 
             Theme.Current.H1("Cards")
@@ -210,33 +203,33 @@ class CardsPage : Component<CardsPageState>
         if (Navigation == null)
             return;
 
-        Validate.EnsureNotNull(_addOrEditCardAction);
-        
+        Validate.EnsureNotNull(_onAddOrEditCard);
+
         var cardsViewParameters = GetParameter<MainParameters>();
 
-        await _addOrEditCardAction.Invoke(props =>
+        await _onAddOrEditCard.Invoke(props =>
         {
-            props.OnCardAdded = (Card cardToAdd) => 
+            props.OnCardAdded = (Card cardToAdd) =>
             {
-                cardsViewParameters.Set(p =>
-                {
-                    p.Cards.AddCard(cardToAdd);
-                    p.Refresh();
+                //cardsViewParameters.Set(p =>
+                //{
+                //    p.Cards.AddCard(cardToAdd);
+                //    p.Refresh();
 
-                });
+                //});
             };
-            props.OnCardRemoved = (Card cardToRemove) => 
+            props.OnCardRemoved = (Card cardToRemove) =>
             {
-                cardsViewParameters.Set(p =>
-                {
-                    p.Cards.RemoveCard(cardToRemove.Id);
-                    p.Refresh();
-                });
+                //cardsViewParameters.Set(p =>
+                //{
+                //    p.Cards.RemoveCard(cardToRemove.Id);
+                //    p.Refresh();
+                //});
             };
         });
     }
 
-    async void OnEditCard(IndexedModel<Card>? cardModel)
+    async void OnEditCard(Card cardModel)
     {
         if (cardModel == null)
             return;
@@ -245,28 +238,28 @@ class CardsPage : Component<CardsPageState>
             return;
 
 
-        Validate.EnsureNotNull(_addOrEditCardAction);
+        Validate.EnsureNotNull(_onAddOrEditCard);
         var cardsViewParameters = GetParameter<MainParameters>();
 
-        await _addOrEditCardAction.Invoke(props =>
+        await _onAddOrEditCard.Invoke(props =>
         {
-            props.CardId = cardModel.Model.Id;
+            props.Card = cardModel;
             props.OnCardModified = (Card cardToReplace) =>
-            { 
-                cardsViewParameters.Set(p =>
-                {
-                    p.Cards.ReplaceCard(cardToReplace);
-                    p.Refresh();
-                });
+            {
+                //cardsViewParameters.Set(p =>
+                //{
+                //    p.Cards.ReplaceCard(cardToReplace);
+                //    p.Refresh();
+                //});
 
             };
-            props.OnCardRemoved = (Card cardToRemove)=> 
+            props.OnCardRemoved = (Card cardToRemove) =>
             {
-                cardsViewParameters.Set(p =>
-                {
-                    p.Cards.RemoveCard(cardToRemove.Id);
-                    p.Refresh();
-                });
+                //cardsViewParameters.Set(p =>
+                //{
+                //    p.Cards.RemoveCard(cardToRemove.Id);
+                //    p.Refresh();
+                //});
             };
         });
     }

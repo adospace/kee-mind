@@ -1,10 +1,12 @@
 ﻿
+using ReactorData;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KeeMind.Services.Data;
 
+[Model]
 [Table("Attachments")]
-public class Attachment
+public partial class Attachment
 {
     public int Id { get; set; }
 

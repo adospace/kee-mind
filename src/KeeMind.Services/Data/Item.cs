@@ -1,13 +1,17 @@
-﻿using System;
+﻿using ReactorData;
+using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KeeMind.Services.Data;
 
-public class Item
+[Model]
+public partial class Item
 {
     public int Id { get; set; }
 
-    public required Card Card { get; set; }
+    public int CardId { get; set; }
+
+    public Card? Card { get; set; }
 
     public required string Label { get; set; }
 

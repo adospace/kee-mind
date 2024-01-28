@@ -1,6 +1,7 @@
 ﻿using KeeMind.Resources;
 using KeeMind.Services;
 using KeeMind.Services.Data;
+using MauiReactor;
 using MauiReactor.Internals;
 using System;
 using System.Collections.Generic;
@@ -8,18 +9,13 @@ using System.Threading.Tasks;
 
 namespace KeeMind.Pages;
 
-class HomePage : Component
+partial class HomePage : Component
 {
-    #region Initialization
-    Action? _openFlyoutAction;
+    [Prop]
+    Action? _onOpenFlyout;
+
     private MauiControls.NavigationPage? _navigationPage;
 
-    public HomePage OnOpenFlyout(Action openFlyoutAction)
-    {
-        _openFlyoutAction = openFlyoutAction;
-        return this;
-    }
-    #endregion
 
     #region Render
     public override VisualNode Render()
@@ -27,7 +23,7 @@ class HomePage : Component
         return new NavigationPage(navigationPage => _navigationPage = navigationPage)
         {
             new CardsPage()
-                .OnOpenFlyout(_openFlyoutAction)
+                .OnOpenFlyout(_onOpenFlyout)
                 .OnAddOrEditCard(OnAddOrEditCard)
         }
         

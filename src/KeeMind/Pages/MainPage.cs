@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using MauiReactor;
 using MauiReactor.Parameters;
 using System.Collections.ObjectModel;
+using ReactorData;
 
 namespace KeeMind.Pages;
 
@@ -29,6 +30,8 @@ class MainPageState
     public bool IsFlyoutOpen { get; set; }
     
     public EditEntryPageProps? CurrentEditCardPros { get; set; }
+
+
 }
 
 class MainParameters
@@ -79,21 +82,28 @@ class MainParameters
     }
 }
 
-class MainPage : Component<MainPageState>
+partial class MainPage : Component<MainPageState>
 {
-    #region Initialization
-    private readonly IParameter<MainParameters> _cardsViewParameter;
+    [Inject]
+    IModelContext _modelContext;
 
-    public MainPage()
-    {
-        _cardsViewParameter = CreateParameter<MainParameters>();
-    }
+    [Inject]
+    IRepository _repository;
+
+    [Param]
+    IParameter<MainParameters> _cardsViewParameter;
+
+    #region Initialization
+    //private readonly IParameter<MainParameters> _cardsViewParameter;
+
+    //public MainPage()
+    //{
+    //    _cardsViewParameter = CreateParameter<MainParameters>();
+    //}
 
     protected override void OnMounted()
     {
-        var repository = Services.GetRequiredService<IRepository>();
-
-        if (!repository.ArchiveExists())
+        if (!_repository.ArchiveExists())
         {
             State.CurrentPage = PageEnum.CreateLocalArchive;
         }
@@ -310,10 +320,10 @@ class MainPage : Component<MainPageState>
                         .OnAddOrEditCard(OnAddOrEditCard)
                         .GridColumn(1),
 
-                    State.CurrentEditCardPros != null ?
-                    new EditCardPage(State.CurrentEditCardPros)
-                        .GridColumn(2)
-                    :null,
+                    //State.CurrentEditCardPros != null ?
+                    //new EditCardPage(State.CurrentEditCardPros)
+                    //    .GridColumn(2)
+                    //:null,
                 }
             }
             .WindowTitle("KeeMind");

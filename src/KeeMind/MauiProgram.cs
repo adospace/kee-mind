@@ -1,6 +1,9 @@
 ﻿using KeeMind.Controls;
 using KeeMind.Pages;
 using KeeMind.Services;
+using KeeMind.Services.Data;
+using MauiReactor;
+using ReactorData.EFCore;
 
 namespace KeeMind;
 
@@ -13,6 +16,10 @@ public static class MauiProgram
             .UseMauiReactorApp<MainPage>()
 #if DEBUG
             .EnableMauiReactorHotReload()
+            .OnMauiReactorUnhandledException(ex => 
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            })
 #endif
             .ConfigureFonts(fonts =>
             {
@@ -25,6 +32,26 @@ public static class MauiProgram
         builder.Services.AddKeeMindMauiServices();
 
         KeeMind.Controls.Native.BorderlessEntry.Configure();
+
+        //ReactorData
+        builder.Services.AddReactorDataWithEfCore<DatabaseContext>(
+            modelContextConfigure: options =>
+            {
+                options.Dispatcher = action =>
+                {
+                    if (MauiControls.Application.Current?.Dispatcher.IsDispatchRequired == true)
+                    {
+                        MauiControls.Application.Current?.Dispatcher.Dispatch(action);
+                    }
+                };
+
+                //options.ConfigureContext = context =>
+                //{
+                //    context.Load<Card>();
+                //    context.Load<Tag>();
+                //};
+            });
+
 
         return builder.Build();
     }

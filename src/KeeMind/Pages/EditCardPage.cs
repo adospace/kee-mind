@@ -12,6 +12,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using ReactorData;
+using System.Collections.ObjectModel;
 
 namespace KeeMind.Pages;
 
@@ -21,16 +23,22 @@ class EditEntryPageState
 
     public bool IsClosing { get; set; }
 
-    public Card Card { get; set; } = new Card { Name = string.Empty, EditMode = EditMode.New };
+    public Card Card { get; set; } = default!;
+
+    public IQuery<Item> Items { get; set; } = default!;
 
     public bool IsEditing { get; set; }
 
-    public double EntranceTransitionX { get; set; }
+    public IModelContext ModelContext { get; set; } = default!;
+
+    //public double EntranceTransitionX { get; set; }
 }
 
 class EditEntryPageProps
 {
-    public int? CardId { get; set; }
+    //public int? CardId { get; set; }
+
+    public Card? Card { get; set; }
 
     public Action<Card>? OnCardAdded;
 
@@ -43,79 +51,112 @@ class EditEntryPageProps
     public Action? OnClose;
 }
 
-class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
+partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 {
+    [Inject]
+    IModelContext _modelContext;
+
     #region Initialization
     private MauiControls.Entry? _titleEntryRef;
 
-    public EditCardPage()
-    { }
+    //public EditCardPage()
+    //{ }
 
-    public EditCardPage(EditEntryPageProps props)
-        :base(props: props)
-    { 
-    
-    }
+    //public EditCardPage(EditEntryPageProps props)
+    //    :base(props: props)
+    //{ 
 
-    protected override void OnMounted()
+    //}
+
+    //    protected override void OnMounted()
+    //    {
+
+    //        //InitializeState();
+
+    ////#if ANDROID
+    ////        if (MauiControls.Application.Current?.Dispatcher != null)
+    ////        {
+    ////            State.EntranceTransitionX = 400;
+    ////            MauiControls.Application.Current.Dispatcher.Dispatch(() => SetState(s => s.EntranceTransitionX = 0));
+    ////        }
+    ////#endif
+
+    //        base.OnMounted();
+    //    }
+
+    protected override void OnMountedOrPropsChanged()
     {
-        InitializeState();
+        State.ModelContext = _modelContext.CreateScope();
 
-#if ANDROID
-        if (MauiControls.Application.Current?.Dispatcher != null)
+        State.Items = State.ModelContext.Query<Item>();
+        State.Items.CollectionChanged += (sender, args) => Invalidate();
+
+        State.ModelContext.Query<Card>().CollectionChanged += (sender, args) => SetState(s => s.Card = (Card)args.NewItems![0]!);
+
+        if (Props.Card != null)
         {
-            State.EntranceTransitionX = 400;
-            MauiControls.Application.Current.Dispatcher.Dispatch(() => SetState(s => s.EntranceTransitionX = 0));
-        }
-#endif
-
-        base.OnMounted();
-    }
-
-    protected override void OnPropsChanged()
-    {
-        InitializeState();
-        base.OnPropsChanged();
-    }
-
-    void InitializeState()
-    {
-        if (Props.CardId != null)
-        {
-            Task.Run(LoadCard);
+            //State.ModelContext.Load<Card>(x => x.Where(_ => _.Id == Props.CardId), onLoad: items => SetState(s => s.Card = items.First()));
+            State.ModelContext.Update(State.Card = new Card { Id = Props.Card.Id, Name = Props.Card.Name, IsFavorite = Props.Card.IsFavorite });
+            State.ModelContext.Load<Item>(x => x.Where(_ => _.CardId == Props.Card.Id));
         }
         else
         {
-            State.Card = new Card { Name = string.Empty, EditMode = EditMode.New };
-            State.Card.Items.Add(new Item { Card = State.Card, Label = "Email", Value = "" });
-            State.Card.Items.Add(new Item { Card = State.Card, Label = "Password", Value = "", IsMasked = true });
+            State.ModelContext.Add(State.Card = new Card { Name = string.Empty, EditMode = EditMode.New });
+            State.ModelContext.AddRange([
+                new Item { Card = State.Card, Label = "Email", Value = string.Empty },
+                new Item { Card = State.Card, Label = "Password", Value = string.Empty, IsMasked = true }
+                ]);
             State.IsEditing = true;
         }
+
+        base.OnMountedOrPropsChanged();
     }
 
-    async Task LoadCard()
-    {
-        System.Diagnostics.Debug.WriteLine($"Loading card {Props.CardId}");
 
-        ValidateExtensions.ThrowIfNull(Props.CardId);
-        var repository = Services.GetRequiredService<IRepository>();
+    //protected override void OnPropsChanged()
+    //{
+    //    InitializeState();
+    //    base.OnPropsChanged();
+    //}
 
-        await using var db = repository.OpenArchive();
-        State.Card = await db.Cards
-            .Include(_ => _.Items)
-            .Include(_ => _.Tags)
-            .ThenInclude(_ => _.Tag)
-            .Include(_ => _.Attachments)
-            .AsNoTracking()
-            .FirstAsync(_ => _.Id == Props.CardId);
-        
-        State.IsEditing = false;
+    //void InitializeState()
+    //{
+    //    if (Props.CardId != null)
+    //    {
+    //        Task.Run(LoadCard);
+    //    }
+    //    else
+    //    {
+    //        State.Card = new Card { Name = string.Empty, EditMode = EditMode.New, Items = [] };
+    //        State.Card.Items.Add(new Item { Card = State.Card, Label = "Email", Value = "" });
+    //        State.Card.Items.Add(new Item { Card = State.Card, Label = "Password", Value = "", IsMasked = true });
+    //        State.IsEditing = true;
+    //    }
+    //}
 
-        SetState(s =>
-        {
-            s.IsLoading = false;
-        });
-    }
+    //async Task LoadCard()
+    //{
+    //    System.Diagnostics.Debug.WriteLine($"Loading card {Props.CardId}");
+
+    //    ValidateExtensions.ThrowIfNull(Props.CardId);
+    //    var repository = Services.GetRequiredService<IRepository>();
+
+    //    await using var db = repository.OpenArchive();
+    //    State.Card = await db.Cards
+    //        .Include(_ => _.Items)
+    //        .Include(_ => _.Tags)
+    //        .ThenInclude(_ => _.Tag)
+    //        .Include(_ => _.Attachments)
+    //        .AsNoTracking()
+    //        .FirstAsync(_ => _.Id == Props.CardId);
+
+    //    State.IsEditing = false;
+
+    //    SetState(s =>
+    //    {
+    //        s.IsLoading = false;
+    //    });
+    //}
     #endregion
 
     #region Render
@@ -127,8 +168,8 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             {
                 RenderBody()
             }
-            .TranslationX(State.EntranceTransitionX)
-            .WithAnimation(easing: Easing.CubicOut, duration: 200)
+            //.TranslationX(State.EntranceTransitionX)
+            //.WithAnimation(easing: Easing.CubicOut, duration: 200)
             .Set(MauiControls.NavigationPage.HasNavigationBarProperty, false);
         }
         else
@@ -146,13 +187,13 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             :
             RenderTop(),
 
-            RenderItems(),
-
+            RenderItems()
+                //.GridRow(1)
+                ,
 
             RenderTags(),
 
-
-            State.IsEditing && Props.CardId != null ?
+            State.IsEditing && Props.Card != null ?
             RenderBottomCommands() : null
         };
     }
@@ -205,15 +246,16 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
                 ,
 
             new BorderlessEntry(entryRef => _titleEntryRef = entryRef)
-                .Text(State.Card.Name ?? string.Empty)
+                .Text(State.Card?.Name ?? string.Empty)
                 .TextColor(Theme.Current.WhiteColor)
                 .OnTextChanged(newName =>
                 {
                     State.Card.Name = newName;
-                    if (State.Card.EditMode == EditMode.None)
-                    {
-                        State.Card.EditMode = EditMode.Modified;
-                    }                    
+                    State.ModelContext.Update(State.Card);
+                    //if (State.Card.EditMode == EditMode.None)
+                    //{
+                    //    State.Card.EditMode = EditMode.Modified;
+                    //}                    
                 })
                 .Placeholder("Untitled")
                 .PlaceholderColor(Theme.Current.WhiteColor)
@@ -234,12 +276,10 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
     }
 
     VisualNode RenderItems()
-    {
-        return new VerticalScrollView
+        => new VScrollView
         {
-            new VerticalStackLayout
-            {
-                State.Card.Items
+            VStack([..
+                State.Items
                     .Where(_=>_.EditMode != EditMode.Deleted)
                     .Select(RenderItem)
                     .Concat(State.IsEditing ?
@@ -252,19 +292,42 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
                             .BackgroundColor(Theme.Current.DarkGrayColor)
                             .Margin(16, 0)
                     }: Array.Empty<VisualNode>())
-            }
+            ])
             .Spacing(16)
             .Margin(0, 16)
         }
         .GridRow(1);
-    }
+
+    //ScrollView RenderItems()
+    //    => VScrollView(
+    //            VStack([..
+    //                State.Items
+    //                    //.Where(_=>_.EditMode != EditMode.Deleted)
+    //                    .Select(RenderItem)
+    //                    .Concat(State.IsEditing ?
+    //                    [
+    //                        Theme.Current.Button("ADD")
+    //                            .HStart()
+    //                            .VStart()
+    //                            .OnClicked(OnAddItem)
+    //                            .BackgroundColor(Theme.Current.DarkGrayColor)
+    //                            .Margin(16, 0)
+    //                    ]: [])
+    //                    ]
+    //        )
+    //        .Spacing(16)
+    //        .Margin(0, 16)
+    //        .BackgroundColor(Colors.Green)
+    //    )
+    //    .GridRow(1);    
 
     VisualNode RenderItem(Item item)
     {
-        return new Components.ItemComponent()
+        return new ItemComponent()
             .Item(item)
             .IsEditing(State.IsEditing)
-            .OnDelete(()=> OnDeleteItem(item));
+            .OnUpdate(() => State.ModelContext.Update(item))
+            .OnDelete(()=> State.ModelContext.Delete(item));
     }
 
     VisualNode[] RenderTags()
@@ -274,8 +337,8 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             return Array.Empty<VisualNode>();
         }
 
-        return new VisualNode[]
-        {
+        return
+        [
             new Label()
                 .BackgroundColor(Theme.Current.LightGrayColor)
                 .TextColor(Theme.Current.BlackColor)
@@ -292,7 +355,7 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             new TagsViewer()
                 .Card(State.Card)
                 .GridRow(3)
-        };
+        ];
     }
 
     VisualNode RenderBottomCommands()
@@ -325,31 +388,50 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
     #endregion
 
     #region Events
-    void OnDeleteItem(Item item)
-    {
-        item.EditMode = EditMode.Deleted;
-        Invalidate();
-    }
+    //void OnDeleteItem(Item item)
+    //{
+    //    //item.EditMode = EditMode.Deleted;
+    //    //State.Items.Remove(item);
+    //    State.ModelContext.Delete(item);        
+
+    //    //Invalidate();
+    //}
 
     void OnAddItem()
     {
-        State.Card.Items.Add(new Item() { Card = State.Card, Label = string.Empty, Value = string.Empty, EditMode = EditMode.New });
+        var newItem = new Item() { Card = State.Card, Label = string.Empty, Value = string.Empty, EditMode = EditMode.New };
+        //State.Items.Add(newItem);
+
+        State.ModelContext.Add(newItem);
+
         Invalidate();
     }
 
-    async void ToggleFavorite()
+    void ToggleFavorite()
     {
-        var repository = Services.GetRequiredService<IRepository>();
-        await using var db = repository.OpenArchive();
+        if (State.Card == null)
+        {
+            return;
+        }
 
         State.Card.IsFavorite = !State.Card.IsFavorite;
-        db.Cards.Update(State.Card);
 
-        await db.SaveChangesAsync();
+        State.ModelContext.Update(State.Card);
 
-        Props.OnCardModified?.Invoke(State.Card);
+        State.ModelContext.Save();
 
-        Invalidate();
+
+        //var repository = Services.GetRequiredService<IRepository>();
+        //await using var db = repository.OpenArchive();
+
+        //State.Card.IsFavorite = !State.Card.IsFavorite;
+        //db.Cards.Update(State.Card);
+
+        //await db.SaveChangesAsync();
+
+        //Props.OnCardModified?.Invoke(State.Card);
+
+        //Invalidate();
     }
 
     async void SaveCard()
@@ -364,104 +446,131 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(State.Card.Name))
+        if (string.IsNullOrWhiteSpace(State.Card?.Name))
         {
             await ContainerPage.DisplayAlert("Invalid Card", "Please enter a valid card name", "OK");
             return;
         }
 
-        foreach (var item in State.Card.Items.ToArray())
+        foreach (var item in State.Items.ToArray())
         {
             if (string.IsNullOrWhiteSpace(item.Label) && string.IsNullOrWhiteSpace(item.Value))
             {
-                State.Card.Items.Remove(item);
+                //State.Items.Remove(item);
+                State.ModelContext.Delete(item);
             }
             else if (string.IsNullOrWhiteSpace(item.Label))
             {
                 item.Label = "Label";
+                State.ModelContext.Update(item);
             }
         }
 
-        var repository = Services.GetRequiredService<IRepository>();
+        //if (State.Card.Id == 0)
+        //{
+        //    State.ModelContext.Add(State.Card);
+        //}
+        //else
+        //{
+        //    State.ModelContext.Update(State.Card);
+        //}
 
-        await using var db = repository.OpenArchive();
+        //foreach (var item in State.Items)
+        //{
+        //    if (item.Id == 0)
+        //    {
+        //        State.ModelContext.Add(item);
+        //    }
+        //    else
+        //    {
+        //        State.ModelContext.Update(item);
+        //    }
+        //}
 
-        if (State.Card.EditMode == EditMode.New)
-        {
-            db.Cards.Add(State.Card);
-        }
-        else 
-        {
-            if (State.Card.EditMode == EditMode.Modified)
-            {
-                db.Entry(State.Card).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-            }
+        State.ModelContext.Save();
 
-            foreach (var item in State.Card.Items)
-            {
-                if (item.EditMode == EditMode.Deleted)
-                {
-                    db.Entry(item).State = Microsoft.EntityFrameworkCore.EntityState.Deleted;
-                }
-                else if (item.EditMode == EditMode.Modified)
-                {
-                    db.Entry(item).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-                }
-                else if (item.EditMode == EditMode.New)
-                {
-                    db.Entry(item).State = Microsoft.EntityFrameworkCore.EntityState.Added;
-                }
-            }       
+        SetState(s => s.IsEditing = false);
 
-            foreach (var tagEntry in State.Card.Tags)
-            {
-                if (tagEntry.EditMode == EditMode.Deleted)
-                {
-                    db.Entry(tagEntry).State = Microsoft.EntityFrameworkCore.EntityState.Deleted;
-                }
-                else if (tagEntry.EditMode == EditMode.Modified)
-                {
-                    db.Entry(tagEntry).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-                }
-                else if (tagEntry.EditMode == EditMode.New)
-                {
-                    db.Entry(tagEntry).State = Microsoft.EntityFrameworkCore.EntityState.Added;
-                }
-            }       
-        }
+        //var repository = Services.GetRequiredService<IRepository>();
 
-        foreach (var tag in db.ChangeTracker.Entries<Tag>())
-        {
-            tag.State = EntityState.Unchanged;
-        }
+        //await using var db = repository.OpenArchive();
 
-        await db.SaveChangesAsync();
+        //if (State.Card.EditMode == EditMode.New)
+        //{
+        //    db.Cards.Add(State.Card);
+        //}
+        //else 
+        //{
+        //    if (State.Card.EditMode == EditMode.Modified)
+        //    {
+        //        db.Entry(State.Card).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+        //    }
 
-        foreach (var emptyTags in await db.Tags.Where(_ => !_.Entries!.Any()).ToArrayAsync())
-        {
-            db.Tags.Remove(emptyTags);
-        }
+        //    foreach (var item in State.Card.Items)
+        //    {
+        //        if (item.EditMode == EditMode.Deleted)
+        //        {
+        //            db.Entry(item).State = Microsoft.EntityFrameworkCore.EntityState.Deleted;
+        //        }
+        //        else if (item.EditMode == EditMode.Modified)
+        //        {
+        //            db.Entry(item).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+        //        }
+        //        else if (item.EditMode == EditMode.New)
+        //        {
+        //            db.Entry(item).State = Microsoft.EntityFrameworkCore.EntityState.Added;
+        //        }
+        //    }       
 
-        await db.SaveChangesAsync();
+        //    foreach (var tagEntry in State.Card.Tags)
+        //    {
+        //        if (tagEntry.EditMode == EditMode.Deleted)
+        //        {
+        //            db.Entry(tagEntry).State = Microsoft.EntityFrameworkCore.EntityState.Deleted;
+        //        }
+        //        else if (tagEntry.EditMode == EditMode.Modified)
+        //        {
+        //            db.Entry(tagEntry).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+        //        }
+        //        else if (tagEntry.EditMode == EditMode.New)
+        //        {
+        //            db.Entry(tagEntry).State = Microsoft.EntityFrameworkCore.EntityState.Added;
+        //        }
+        //    }       
+        //}
 
-        Props.CardId = State.Card.Id;
+        //foreach (var tag in db.ChangeTracker.Entries<Tag>())
+        //{
+        //    tag.State = EntityState.Unchanged;
+        //}
 
-        var newCard = State.Card.EditMode == EditMode.New;
+        //await db.SaveChangesAsync();
 
-        await LoadCard();
+        //foreach (var emptyTags in await db.Tags.Where(_ => !_.Entries!.Any()).ToArrayAsync())
+        //{
+        //    db.Tags.Remove(emptyTags);
+        //}
+
+        //await db.SaveChangesAsync();
+
+        //Props.CardId = State.Card.Id;
+
+        //var newCard = State.Card.EditMode == EditMode.New;
+
+        //await LoadCard();
         
-        if (newCard)
-        {
-            Props.OnCardAdded?.Invoke(State.Card);
-        }
-        else
-        {
-            Props.OnCardModified?.Invoke(State.Card);
-        }
+        //if (newCard)
+        //{
+        //    Props.OnCardAdded?.Invoke(State.Card);
+        //}
+        //else
+        //{
+        //    Props.OnCardModified?.Invoke(State.Card);
+        //}
 
-        State.IsEditing = false;
+        //State.IsEditing = false;
 
-        Invalidate();
+        //Invalidate();
     }
 
     async void OnCancelCard()
@@ -492,36 +601,36 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             await Navigation.PopAsync();
         }
 
-        if (State.Card.EditMode == EditMode.None && 
-            State.Card.Items.All(_ => _.EditMode == EditMode.None))
-        {
-            await LoadCard();
-            return;
-        }
+        //if (State.Card.EditMode == EditMode.None && 
+        //    State.Items.All(_ => _.EditMode == EditMode.None))
+        //{
+        //    //await LoadCard();
+        //    return;
+        //}
 
-        if (State.Card.EditMode == EditMode.New && 
-            (State.Card.Items.Count == 0 || State.Card.Items[0].IsEmpty()))
+        if (State.Card?.Id == 0 && 
+            (State.Items.Count == 0 || State.Items.First().IsEmpty()))
         {
             await ClosePage();
             return;
         }
 
         if (!await ContainerPage.DisplayAlert(
-            title: Props.CardId == null ? "Undo Card Creation" : "Cancel Editing", 
-            message: Props.CardId == null ? "Are you sure you want to not add the new card?" : "Are you sure you want to cancel any modifications?", 
+            title: Props.Card == null ? "Undo Card Creation" : "Cancel Editing", 
+            message: Props.Card == null ? "Are you sure you want to not add the new card?" : "Are you sure you want to cancel any modifications?", 
             accept: "Cancel", 
-            cancel: Props.CardId == null ? "Back to New Card" : "Back To Edit Card"))
+            cancel: Props.Card == null ? "Back to New Card" : "Back To Edit Card"))
         {
             return;
         }
 
-        if (Props.CardId == null)
+        if (Props.Card == null)
         {
             await ClosePage();
         }
         else
         {
-            await LoadCard();
+            //await LoadCard();
         }
     }
 
@@ -574,7 +683,7 @@ class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             .Include(_ => _.Items)
             .Include(_ => _.Tags)
             .Include(_ => _.Attachments)
-            .FirstAsync(_ => _.Id == Props.CardId);
+            .FirstAsync(_ => _.Id == Props.Card.Id);
 
         db.Cards.Remove(cardToRemove);
 
