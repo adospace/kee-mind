@@ -92,6 +92,10 @@ internal class Repository : IRepository
 
             await db.Database.MigrateAsync();
 
+            db.Tags.RemoveRange(await db.Tags.Where(_ => _.Entries!.Count == 0).ToListAsync());
+
+            await db.SaveChangesAsync();
+
             _currentDatabaseConnectionString = connectionString;
 
             return db;

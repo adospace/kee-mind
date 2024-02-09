@@ -30,9 +30,9 @@ public class DatabaseContext : DbContext
     {
         optionsBuilder.UseSqlite(_connectionString ?? new SqliteConnectionStringBuilder { DataSource = "dummy.db" }.ToString());
 
-#if DEBUG
-        optionsBuilder.LogTo(message => System.Diagnostics.Debug.WriteLine(message));
-#endif
+//#if DEBUG
+//        optionsBuilder.LogTo(message => System.Diagnostics.Debug.WriteLine(message));
+//#endif
     }
 
 }

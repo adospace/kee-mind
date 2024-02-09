@@ -23,63 +23,20 @@ enum PageEnum
     Home,
 }
 
+class MainParameters
+{
+    public Dictionary<int, Tag> FilterTags { get; set; } = [];
+
+    public bool ShowFavoritesOnly { get; set; }
+}
+
 class MainPageState
 {
     public PageEnum CurrentPage { get; set; }
 
     public bool IsFlyoutOpen { get; set; }
-    
-    public EditEntryPageProps? CurrentEditCardPros { get; set; }
 
-
-}
-
-class MainParameters
-{
-    public ObservableCollection<IndexedModel<Card>> Cards { get; set; } = new();
-
-    public ObservableCollection<IndexedModel<Card>> SortedAndFilteredCards { get; set; } = new();
-
-    public SortedDictionary<int, Tag> FilterTags { get; set; } = new();
-
-    public SortedDictionary<int, Tag> AllTags { get; set; } = new();
-
-    public bool ShowFavoritesOnly { get; set; }
-
-    public void Refresh()
-    {
-        for (int i = 0; i < Cards.Count; i++)
-        {
-            Cards[i].Index = i;
-        }
-
-        while (SortedAndFilteredCards.Count > 0)
-        {
-            SortedAndFilteredCards.RemoveAt(0);
-        }
-
-        var cards = FilterTags.Count > 0 ?
-            Cards.Where(_ => _.Model.Tags.Any(x => FilterTags.ContainsKey(x.Tag.Id)))
-            :
-            Cards;
-
-        if (ShowFavoritesOnly)
-        {
-            cards = cards.Where(_ => _.Model.IsFavorite);
-        }
-
-        foreach (var cardToInsert in cards)
-        {
-            SortedAndFilteredCards.Add(cardToInsert);
-        }
-
-        AllTags = new SortedDictionary<int, Tag>(
-            Cards
-            .SelectMany(_ => _.Model.Tags)
-            .Select(_ => _.Tag)
-            .GroupBy(_ => _.Id)
-            .ToDictionary(_ => _.Key, _ => _.First()));
-    }
+    public IQuery<Tag> Tags { get; set; } = default!;
 }
 
 partial class MainPage : Component<MainPageState>
@@ -91,15 +48,9 @@ partial class MainPage : Component<MainPageState>
     IRepository _repository;
 
     [Param]
-    IParameter<MainParameters> _cardsViewParameter;
+    IParameter<MainParameters> _mainParameters;
 
     #region Initialization
-    //private readonly IParameter<MainParameters> _cardsViewParameter;
-
-    //public MainPage()
-    //{
-    //    _cardsViewParameter = CreateParameter<MainParameters>();
-    //}
 
     protected override void OnMounted()
     {
@@ -112,13 +63,19 @@ partial class MainPage : Component<MainPageState>
             State.CurrentPage = PageEnum.Login;
         }
 
+
+        State.Tags = _modelContext.Query<Tag>(_ => _.OrderBy(x => x.Name));
+
+        State.Tags.CollectionChanged += (s, e) => Invalidate();
+
+
         base.OnMounted();
     }
 
     private void UpdateStatusBarAppearance()
     {
 #if ANDROID
-        MainActivity.SetWindowTheme(State.CurrentPage == PageEnum.Login || State.CurrentPage == PageEnum.CreateLocalArchive ? false : true);
+    MainActivity.SetWindowTheme(State.CurrentPage == PageEnum.Login || State.CurrentPage == PageEnum.CreateLocalArchive ? false : true);
 #endif
     }
     #endregion
@@ -157,107 +114,107 @@ partial class MainPage : Component<MainPageState>
     VisualNode RenderFlyoutBody()
     {
         return new Grid("64 128 * 62", "*")
+    {
+        Theme.Current.ImageButton("close_white.png")
+            .Aspect(Aspect.Center)
+            .HStart()
+            .WidthRequest(64)
+            .BackgroundColor(Colors.Transparent)
+            .OnClicked(()=>SetState(s => s.IsFlyoutOpen = false, invalidateComponent: false))
+            .IsVisible(Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone),
+
+        new Image("logo.png")
+            .Aspect(Aspect.Center)
+            .IsVisible(Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Desktop),
+
+        new VStack(spacing:24)
         {
-            Theme.Current.ImageButton("close_white.png")
-                .Aspect(Aspect.Center)
-                .HStart()
-                .WidthRequest(64)
-                .BackgroundColor(Colors.Transparent)
-                .OnClicked(()=>SetState(s => s.IsFlyoutOpen = false, invalidateComponent: false))
-                .IsVisible(Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone),
-
-            new Image("logo.png")
-                .Aspect(Aspect.Center)
-                .IsVisible(Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Desktop),
-
-            new VStack(spacing:24)
-            {
-                new Grid("*", "20,*")
-                {
-                    new Image("home_white.png")
-                        .HCenter(),
-
-                    Theme.Current.H3("All Cards")
-
-                        .GridColumn(1)
-                        .VCenter()
-                        .Margin(12,0,0,0)
-                        .TextColor(Theme.Current.WhiteColor)
-                }
-                .OnTapped(()=> SetState(s =>
-                {
-                    _cardsViewParameter.Set(p =>
-                    {
-                        p.ShowFavoritesOnly = false;
-                        p.FilterTags.Clear();
-                        p.Refresh();
-                    });
-
-                    s.IsFlyoutOpen = false;
-                })),
-
-                new Grid("*", "20,*")
-                {
-                    new Image("favorites_white.png")
-                        .HCenter(),
-
-                    Theme.Current.H3("Favorites")
-                        .GridColumn(1)
-                        .VCenter()
-                        .Margin(12,0,0,0)
-                        .TextColor(Theme.Current.WhiteColor)
-                }
-                .OnTapped(()=> SetState(s =>
-                {
-                    _cardsViewParameter.Set(p =>
-                    {
-                        p.ShowFavoritesOnly = true;
-                        p.Refresh();
-                    });
-                    s.IsFlyoutOpen = false;
-                })),
-            }
-            .Padding(16,0)
-            .GridRow(1)
-            .VEnd(),
-
-            new VStack(spacing: 15)
-            {
-                Theme.Current.Label("TAGS")
-                    .GridColumn(1)
-                    .VCenter()
-                    .TextColor(Theme.Current.WhiteColor),
-
-                new FlexLayout
-                {
-                    _cardsViewParameter.Value.AllTags.Select(RenderFlyoutTagItem)
-                }
-                .Wrap(Microsoft.Maui.Layouts.FlexWrap.Wrap)
-            }
-            .GridRow(2)
-            .Margin(16,40,16,0),
-
             new Grid("*", "20,*")
             {
-                new Image("gear_white.png")
+                new Image("home_white.png")
                     .HCenter(),
 
-                Theme.Current.H3("Settings")
+                Theme.Current.H3("All Cards")
+
                     .GridColumn(1)
                     .VCenter()
                     .Margin(12,0,0,0)
                     .TextColor(Theme.Current.WhiteColor)
             }
-            .Padding(16,0)
-            .BackgroundColor(Theme.Current.DarkBlackColor)
-            .GridRow(3)
+            .OnTapped(()=> SetState(s =>
+            {
+                _mainParameters.Set(p =>
+                {
+                    p.ShowFavoritesOnly = false;
+                    p.FilterTags.Clear();
+                    //p.Refresh();
+                });
+
+                s.IsFlyoutOpen = false;
+            })),
+
+            new Grid("*", "20,*")
+            {
+                new Image("favorites_white.png")
+                    .HCenter(),
+
+                Theme.Current.H3("Favorites")
+                    .GridColumn(1)
+                    .VCenter()
+                    .Margin(12,0,0,0)
+                    .TextColor(Theme.Current.WhiteColor)
+            }
+            .OnTapped(()=> SetState(s =>
+            {
+                _mainParameters.Set(p =>
+                {
+                    p.ShowFavoritesOnly = true;
+                    //p.Refresh();
+                });
+                s.IsFlyoutOpen = false;
+            })),
         }
+        .Padding(16,0)
+        .GridRow(1)
+        .VEnd(),
+
+        new VStack(spacing: 15)
+        {
+            Theme.Current.Label("TAGS")
+                .GridColumn(1)
+                .VCenter()
+                .TextColor(Theme.Current.WhiteColor),
+
+            new FlexLayout
+            {
+                State.Tags.Select(RenderFlyoutTagItem)
+            }
+            .Wrap(Microsoft.Maui.Layouts.FlexWrap.Wrap)
+        }
+        .GridRow(2)
+        .Margin(16,40,16,0),
+
+        new Grid("*", "20,*")
+        {
+            new Image("gear_white.png")
+                .HCenter(),
+
+            Theme.Current.H3("Settings")
+                .GridColumn(1)
+                .VCenter()
+                .Margin(12,0,0,0)
+                .TextColor(Theme.Current.WhiteColor)
+        }
+        .Padding(16,0)
+        .BackgroundColor(Theme.Current.DarkBlackColor)
+        .GridRow(3)
+    }
         .BackgroundColor(Theme.Current.BlackColor);
     }
 
-    VisualNode RenderFlyoutTagItem(KeyValuePair<int, Tag> tagItem)
+    VisualNode RenderFlyoutTagItem(Tag tag)
     {
-        return Theme.Current.Button(tagItem.Value.Name.ToUpper())
+        return Theme.Current.Button(tag.Name.ToUpper())
             .BackgroundColor(Theme.Current.AccentColor)
             .TextColor(Theme.Current.BlackColor)
             .Padding(12, 0)
@@ -265,10 +222,10 @@ partial class MainPage : Component<MainPageState>
             .Margin(0, 0, 10, 20)
             .OnClicked(() =>
             {
-                _cardsViewParameter.Set(p =>
+                _mainParameters.Set(p =>
                 {
-                    p.FilterTags.Add(tagItem.Key, tagItem.Value);
-                    p.Refresh();
+                    p.FilterTags.Add(tag.Id, tag);
+                    //p.Refresh();
                 });
                 SetState(s => s.IsFlyoutOpen = false);
             });
@@ -298,7 +255,7 @@ partial class MainPage : Component<MainPageState>
                 SetState(s => s.CurrentPage = PageEnum.Home);
                 UpdateStatusBarAppearance();
             });
-        
+
     }
 
     VisualNode RenderHomePage()
@@ -311,21 +268,21 @@ partial class MainPage : Component<MainPageState>
         else
         {
             return new ContentPage("KeeMind")
+        {
+            new Grid("*", "300, 400, *")
             {
-                new Grid("*", "300, 400, *")
-                {
-                    RenderFlyoutBody(),
+                RenderFlyoutBody(),
 
-                    new CardsPage()
-                        .OnAddOrEditCard(OnAddOrEditCard)
-                        .GridColumn(1),
+                new CardsPage()
+                    //.OnAddOrEditCard(OnAddOrEditCard)
+                    .GridColumn(1),
 
-                    //State.CurrentEditCardPros != null ?
-                    //new EditCardPage(State.CurrentEditCardPros)
-                    //    .GridColumn(2)
-                    //:null,
-                }
+                //State.CurrentEditCardPros != null ?
+                //new EditCardPage(State.CurrentEditCardPros)
+                //    .GridColumn(2)
+                //:null,
             }
+        }
             .WindowTitle("KeeMind");
         }
     }
@@ -333,52 +290,56 @@ partial class MainPage : Component<MainPageState>
     VisualNode RenderLoginPage()
     {
         return new LoginPage()
-            .OnLoggedIn(cardList => SetState(s =>
+            .OnLoggedIn(() => SetState(s =>
             {
                 s.CurrentPage = PageEnum.Home;
-                _cardsViewParameter.Set(p =>
-                {
-                    p.Cards = new ObservableCollection<IndexedModel<Card>>(cardList);
-                    //p.AllTags = new SortedDictionary<int, Tag>(
-                    //    cardList
-                    //    .SelectMany(_ => _.Model.Tags)
-                    //    .Select(_ => _.Tag)
-                    //    .GroupBy(_ => _.Id)
-                    //    .ToDictionary(_ => _.Key, _ => _.First()));
 
-                    p.Refresh();
-                });
 
-                UpdateStatusBarAppearance();
+                _modelContext.Load<Tag>(_ => _.Where(x => x.Entries!.Any()));
+
+                //_cardsViewParameter.Set(p =>
+                //{
+                //    p.Cards = new ObservableCollection<IndexedModel<Card>>(cardList);
+                //    //p.AllTags = new SortedDictionary<int, Tag>(
+                //    //    cardList
+                //    //    .SelectMany(_ => _.Model.Tags)
+                //    //    .Select(_ => _.Tag)
+                //    //    .GroupBy(_ => _.Id)
+                //    //    .ToDictionary(_ => _.Key, _ => _.First()));
+
+                //    p.Refresh();
+                //});
+
+                //UpdateStatusBarAppearance();
             }));
     }
     #endregion
 
-    #region Events
-    Task OnAddOrEditCard(Action<EditEntryPageProps> actionToGetProps)
-    {
-        var currentEditCardProps = new EditEntryPageProps();
+    //#region Events
+    //Task OnAddOrEditCard(Action<EditEntryPageProps> actionToGetProps)
+    //{
+    //    var currentEditCardProps = new EditEntryPageProps();
 
-        actionToGetProps(currentEditCardProps);
+    //    actionToGetProps(currentEditCardProps);
 
-        currentEditCardProps.OnEditCanceled = (card) =>
-        {
-            if (card.EditMode == EditMode.New ||
-                card.EditMode == EditMode.Deleted)
-            {
-                SetState(s =>
-                {
-                    s.CurrentEditCardPros = null;
-                });
-            }
-        };
+    //    //currentEditCardProps.OnEditCanceled = (card) =>
+    //    //{
+    //    //    if (card.EditMode == EditMode.New ||
+    //    //        card.EditMode == EditMode.Deleted)
+    //    //    {
+    //    //        SetState(s =>
+    //    //        {
+    //    //            s.CurrentEditCardPros = null;
+    //    //        });
+    //    //    }
+    //    //};
 
-        SetState(s =>
-        {
-            s.CurrentEditCardPros = currentEditCardProps;
-        });
+    //    SetState(s =>
+    //    {
+    //        s.CurrentEditCardPros = currentEditCardProps;
+    //    });
 
-        return Task.CompletedTask;
-    }
-    #endregion
+    //    return Task.CompletedTask;
+    //}
+    //#endregion
 }

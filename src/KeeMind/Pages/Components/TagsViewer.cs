@@ -3,19 +3,16 @@ using KeeMind.Resources;
 using System.Linq;
 using KeeMind.Services;
 using MauiReactor;
+using System.Collections.Generic;
 
 namespace KeeMind.Pages.Components;
 
-class TagsViewer : Component
+partial class TagsViewer : Component
 {
     #region Initialization
-    Card? _card;
+    [Prop]
+    IReadOnlyList<TagEntry> _entries = default!;
 
-    public TagsViewer Card(Card card)
-    {
-        _card = card;
-        return this;
-    }
     #endregion
 
     #region Render
@@ -25,7 +22,7 @@ class TagsViewer : Component
         {
             new HStack(spacing: 5)
             {
-                _card.ThrowIfNull().Tags.Select(RenderTagItem)
+                _entries.Select(RenderTagItem)
             }
         }
         .HeightRequest(24)

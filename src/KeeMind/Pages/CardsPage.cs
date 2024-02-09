@@ -13,7 +13,7 @@ using MauiReactor;
 using MauiReactor.Internals;
 using System.Collections.ObjectModel;
 using ReactorData;
-
+using MauiReactor.Parameters;
 namespace KeeMind.Pages;
 
 class CardsPageState
@@ -30,19 +30,43 @@ partial class CardsPage : Component<CardsPageState>
     Action? _onOpenFlyout;
 
     [Prop]
-    Func<Action<EditEntryPageProps>, Task>? _onAddOrEditCard;
+    Action<int>? _onEditCard;
+
+    [Prop]
+    Action _onCreateCard;
 
     [Inject]
     IModelContext _modelContext;
 
+    [Param]
+    IParameter<MainParameters> _mainParameters;
+
     protected override void OnMounted()
     {
-        _modelContext.Load<Card>();
-        _modelContext.Load<Tag>();
-
-        State.Cards = _modelContext.Query<Card>(query => query.OrderBy(_ => _.Name));
+        _modelContext.Load<Card>(_ => _.Include(x => x.Tags).ThenInclude(x => x.Tag));
 
         base.OnMounted();
+    }
+
+    protected override void OnMountedOrPropsChanged()
+    {
+        if (_mainParameters.Value.FilterTags.Count > 0)
+        {
+            State.Cards = _modelContext.Query<Card>(query =>
+                query
+                    .When(_mainParameters.Value.ShowFavoritesOnly, _ => _.Where(_ => _.IsFavorite))
+                    .Where(_ => _.Tags.Any(x => _mainParameters.Value.FilterTags.ContainsKey(x.Tag.Id)))
+                    .OrderBy(_ => _.Name));
+        }
+        else
+        {
+            State.Cards = _modelContext.Query<Card>(query =>
+                query
+                    .When(_mainParameters.Value.ShowFavoritesOnly, _ => _.Where(_ => _.IsFavorite))
+                    .OrderBy(_ => _.Name));
+        }
+
+        base.OnMountedOrPropsChanged();
     }
 
     #region Render
@@ -79,7 +103,7 @@ partial class CardsPage : Component<CardsPageState>
                 .Color(Theme.Current.BlackColor)
         );
 
-    VisualNode RenderEntryList()
+    CollectionView RenderEntryList()
         => CollectionView()
             .ItemsSource(State.Cards, RenderCardItem)
             .ItemSizingStrategy(MauiControls.ItemSizingStrategy.MeasureFirstItem)
@@ -107,8 +131,8 @@ partial class CardsPage : Component<CardsPageState>
                 .VCenter()
                 .HCenter()
         }
-        //.When(cardModel.Index % 2 == 1, grid => grid.BackgroundColor(Theme.Current.GrayColor))
-        .OnTapped(()=>OnEditCard(cardModel));
+        .When(State.Cards.IndexOf(cardModel) % 2 == 1, grid => grid.BackgroundColor(Theme.Current.GrayColor))
+        .OnTapped(()=>_onEditCard?.Invoke(cardModel.Id));
     }
 
     VisualNode RenderTag(TagEntry tag)
@@ -120,14 +144,31 @@ partial class CardsPage : Component<CardsPageState>
             .Padding(12, 0);
     }
 
-    VisualNode RenderTagFilters()
+    VisualNode RenderFavoriteOnlySwitch()
     {
-        var cardsViewParameters = GetParameter<MainParameters>();
         return new ScrollView
         {
             new HStack(spacing: 5)
             {
-                cardsViewParameters.Value.FilterTags.Select(RenderFilteredTagItem)
+                _mainParameters.Value.FilterTags
+                    .OrderBy(_=>_.Value.Name)
+                    .Select(RenderFilteredTagItem)
+            }
+        }
+        .Orientation(ScrollOrientation.Horizontal)
+        .Margin(16, 0, 0, 16)
+        .GridRow(1);
+    }
+
+    VisualNode RenderTagFilters()
+    {
+        return new ScrollView
+        {
+            new HStack(spacing: 5)
+            {
+                _mainParameters.Value.FilterTags
+                    .OrderBy(_=>_.Value.Name)
+                    .Select(RenderFilteredTagItem)
             }
         }
         .Orientation(ScrollOrientation.Horizontal)
@@ -137,15 +178,7 @@ partial class CardsPage : Component<CardsPageState>
 
     VisualNode RenderFilteredTagItem(KeyValuePair<int, Tag> tag)
     {
-        void RemoveTag()
-        {
-            var cardsViewParameters = GetParameter<MainParameters>();
-            cardsViewParameters.Set(p =>
-            {
-                p.FilterTags.Remove(tag.Key);
-                p.Refresh();
-            });
-        };
+        void RemoveTag() => _mainParameters.Set(p => p.FilterTags.Remove(tag.Key));
 
         return new Grid("Auto", "Auto, Auto, *")
         {
@@ -177,8 +210,7 @@ partial class CardsPage : Component<CardsPageState>
 
     VisualNode RenderTop()
     {
-        return new Grid("64", "64 * 64")
-        {
+        return Grid("64", "64 * 64",
             Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone ?
             Theme.Current.ImageButton("menu_black.png")
                 .Aspect(Aspect.Center)
@@ -191,79 +223,11 @@ partial class CardsPage : Component<CardsPageState>
 
             Theme.Current.ImageButton("plus_black.png")
                 .Aspect(Aspect.Center)
-                .OnClicked(OnAddCard)
-                .GridColumn(2),
-        };
+                .OnClicked(_onCreateCard)
+                .GridColumn(2)
+        );
     }
 #endregion
-
-    #region Events
-    async void OnAddCard()
-    {
-        if (Navigation == null)
-            return;
-
-        Validate.EnsureNotNull(_onAddOrEditCard);
-
-        var cardsViewParameters = GetParameter<MainParameters>();
-
-        await _onAddOrEditCard.Invoke(props =>
-        {
-            props.OnCardAdded = (Card cardToAdd) =>
-            {
-                //cardsViewParameters.Set(p =>
-                //{
-                //    p.Cards.AddCard(cardToAdd);
-                //    p.Refresh();
-
-                //});
-            };
-            props.OnCardRemoved = (Card cardToRemove) =>
-            {
-                //cardsViewParameters.Set(p =>
-                //{
-                //    p.Cards.RemoveCard(cardToRemove.Id);
-                //    p.Refresh();
-                //});
-            };
-        });
-    }
-
-    async void OnEditCard(Card cardModel)
-    {
-        if (cardModel == null)
-            return;
-
-        if (Navigation == null)
-            return;
-
-
-        Validate.EnsureNotNull(_onAddOrEditCard);
-        var cardsViewParameters = GetParameter<MainParameters>();
-
-        await _onAddOrEditCard.Invoke(props =>
-        {
-            props.Card = cardModel;
-            props.OnCardModified = (Card cardToReplace) =>
-            {
-                //cardsViewParameters.Set(p =>
-                //{
-                //    p.Cards.ReplaceCard(cardToReplace);
-                //    p.Refresh();
-                //});
-
-            };
-            props.OnCardRemoved = (Card cardToRemove) =>
-            {
-                //cardsViewParameters.Set(p =>
-                //{
-                //    p.Cards.RemoveCard(cardToRemove.Id);
-                //    p.Refresh();
-                //});
-            };
-        });
-    }
-    #endregion
 }
 
 static class CardsListExtensions

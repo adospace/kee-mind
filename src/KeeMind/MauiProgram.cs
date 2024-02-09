@@ -43,13 +43,12 @@ public static class MauiProgram
                     {
                         MauiControls.Application.Current?.Dispatcher.Dispatch(action);
                     }
-                };
+                    else
+                    {
+                        action();
+                    }
 
-                //options.ConfigureContext = context =>
-                //{
-                //    context.Load<Card>();
-                //    context.Load<Tag>();
-                //};
+                };
             });
 
 

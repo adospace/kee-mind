@@ -24,7 +24,8 @@ partial class HomePage : Component
         {
             new CardsPage()
                 .OnOpenFlyout(_onOpenFlyout)
-                .OnAddOrEditCard(OnAddOrEditCard)
+                .OnCreateCard(OnAddCard)
+                .OnEditCard(cardId => OnEditCard(cardId))
         }
         
         .BackgroundColor(Theme.Current.WhiteColor);
@@ -32,17 +33,23 @@ partial class HomePage : Component
     #endregion
 
     #region Events
-    private async Task OnAddOrEditCard(Action<EditEntryPageProps> actionToGetProps)
+    private async void OnAddCard()
     {
         if (_navigationPage == null)
         {
             return;
         }
 
-        await _navigationPage.Navigation.PushAsync<EditCardPage, EditEntryPageProps>(props =>
+        await _navigationPage.Navigation.PushAsync<EditCardPage>();
+    }
+    private async void OnEditCard(int cardId)
+    {
+        if (_navigationPage == null)
         {
-            actionToGetProps(props);
-        });
+            return;
+        }
+
+        await _navigationPage.Navigation.PushAsync<EditCardPage, EditEntryPageProps>(props => props.CardId = cardId);
     }
     #endregion
 }

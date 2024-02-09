@@ -17,16 +17,12 @@ class LoginPageState
     public bool LoggingIn { get; set; }
 }
 
-class LoginPage : Component<LoginPageState>
+partial class LoginPage : Component<LoginPageState>
 {
     #region Initialization
-    private Action<List<IndexedModel<Card>>>? _loggedInAction;
+    [Prop]
+    private Action? _onLoggedIn;
 
-    public LoginPage OnLoggedIn(Action<List<IndexedModel<Card>>> loggedInAction)
-    {
-        _loggedInAction = loggedInAction;
-        return this;
-    }
     #endregion
 
     #region Render
@@ -82,21 +78,21 @@ class LoginPage : Component<LoginPageState>
         var db = await repository.TryOpenArchive(pin);
         if (db != null)
         {
-            List<IndexedModel<Card>> cardList = new();
-            int cardIndex = 0;
+            //List<IndexedModel<Card>> cardList = new();
+            //int cardIndex = 0;
 
-            await foreach (var card in db.Cards
-                .Include(_ => _.Tags)
-                .ThenInclude(_ => _.Tag)
-                .OrderBy(_ => _.Name)
-                .AsAsyncEnumerable())
-            {
-                cardList.Add(new IndexedModel<Card>(card, cardIndex));
-                cardIndex++;
-            }
+            //await foreach (var card in db.Cards
+            //    .Include(_ => _.Tags)
+            //    .ThenInclude(_ => _.Tag)
+            //    .OrderBy(_ => _.Name)
+            //    .AsAsyncEnumerable())
+            //{
+            //    cardList.Add(new IndexedModel<Card>(card, cardIndex));
+            //    cardIndex++;
+            //}
 
-            State.LoggingIn = false;
-            _loggedInAction?.Invoke(cardList);
+            //State.LoggingIn = false;
+            _onLoggedIn?.Invoke();
         }
         else if (MauiControls.Application.Current != null)
         {

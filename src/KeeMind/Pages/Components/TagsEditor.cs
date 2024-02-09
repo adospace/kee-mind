@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using MauiReactor;
+using ReactorData;
 
 namespace KeeMind.Pages.Components;
 
@@ -18,23 +19,28 @@ class TagsEditorState
     public string CurrentTagName { get; set; } = string.Empty;
 }
 
-class TagsEditor : Component<TagsEditorState>
+partial class TagsEditor : Component<TagsEditorState>
 {
-    #region Initialization
-    Card? _card;
+    private static readonly char[] _tagsSeparators = [',', ';', ' '];
 
-    public TagsEditor Card(Card card)
-    {
-        _card = card;
-        return this;
-    }
+    #region Initialization
+    [Prop]
+    IReadOnlyList<TagEntry> _entries = default!;
+
+    [Prop]
+    IReadOnlyList<Tag> _tags = default!;
+
+    [Prop]
+    IModelContext _scopedContext = default!;
+
+    [Prop]
+    Card _card = default!;
+
     #endregion
 
     #region Render
     public override VisualNode Render()
     {
-        ValidateExtensions.ThrowIfNull(_card);
-
         return new Grid("*", "*, Auto")
         {
             new VStack(spacing: 8)
@@ -43,7 +49,7 @@ class TagsEditor : Component<TagsEditorState>
                 {
                     new HStack(spacing: 5)
                     {
-                        _card.Tags
+                        _entries
                             .Where(_=>_.EditMode != EditMode.Deleted)
                             .Select(RenderTagItem)
                     }
@@ -59,7 +65,7 @@ class TagsEditor : Component<TagsEditorState>
                     .TextColor(Theme.Current.BlackColor)
                     .PlaceholderColor(Theme.Current.MediumGrayColor)
                     .FontSize(20)
-                    .IsVisible(_card.Tags.Count(_=>_.EditMode != EditMode.Deleted) < 3),
+                    .IsVisible(_entries.Count < 3),
             }
             .Margin(16)
             .VCenter(),
@@ -110,29 +116,48 @@ class TagsEditor : Component<TagsEditorState>
     #endregion
 
     #region Events
-    async void OnAddTag()
+    void OnAddTag()
     {
-        ValidateExtensions.ThrowIfNull(_card);
+        var tagTokens = State.CurrentTagName
+            .Split(_tagsSeparators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var allTags = _tags.GroupBy(_ => _.Name).ToDictionary(_ => _.Key, _ => _.First());
 
-        var repository = Services.GetRequiredService<IRepository>();
-        await using var db = repository.OpenArchive();
-
-        var tags = State.CurrentTagName
-            .Split(new char[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        var allTags = await db.Tags.ToDictionaryAsync(_ => _.Name, _ => _);
-
-        foreach (var tag in tags)
+        foreach (var tagToken in tagTokens)
         {
-            if (!allTags.TryGetValue(tag, out var value))
+            if (!allTags.TryGetValue(tagToken, out var tag))
             {
-                db.Tags.Add(value = new Tag { Name = tag, EditMode = EditMode.New });
-                await db.SaveChangesAsync();
+                tag = new Tag { Name = tagToken, EditMode = EditMode.New };
+
+                _scopedContext.Add(tag);
             }
-            if (!_card.Tags.Any(_=> string.Compare(tag, _.Tag.Name, true) == 0))
+
+            if (!_entries.Any(_ => string.Compare(tagToken, _.Tag.Name, true) == 0))
             {
-                _card.Tags.Add(new TagEntry { Card = _card, Tag = value, EditMode = EditMode.New });
+                _scopedContext.Add(new TagEntry { Card = _card, Tag = tag });
             }
         }
+
+        //var repository = Services.GetRequiredService<IRepository>();
+        //await using var db = repository.OpenArchive();
+
+        //var tags = State.CurrentTagName
+        //    .Split(_tagsSeparators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        //var allTags = await db.Tags.ToDictionaryAsync(_ => _.Name, _ => _);
+
+        //foreach (var tag in tags)
+        //{
+        //    if (!allTags.TryGetValue(tag, out var value))
+        //    {
+        //        db.Tags.Add(value = new Tag { Name = tag, EditMode = EditMode.New });
+        //        await db.SaveChangesAsync();
+        //    }
+        //    if (!_card.Tags.Any(_=> string.Compare(tag, _.Tag.Name, true) == 0))
+        //    {
+        //        _card.Tags.Add(new TagEntry { Card = _card, Tag = value, EditMode = EditMode.New });
+        //    }
+        //}
+
+
 
         State.CurrentTagName = string.Empty;
 
@@ -141,14 +166,17 @@ class TagsEditor : Component<TagsEditorState>
 
     void OnRemoveTag(TagEntry tag)
     {
-        if (tag.EditMode == EditMode.New)
-        {
-            _card.ThrowIfNull().Tags.Remove(tag);
-        }
-        else
-        {
-            tag.EditMode = EditMode.Deleted;
-        }
+        _scopedContext.Delete(tag);
+
+
+        //if (tag.EditMode == EditMode.New)
+        //{
+        //    _card.ThrowIfNull().Tags.Remove(tag);
+        //}
+        //else
+        //{
+        //    tag.EditMode = EditMode.Deleted;
+        //}
 
         Invalidate();
     }
