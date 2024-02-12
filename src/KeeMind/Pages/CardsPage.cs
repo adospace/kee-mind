@@ -14,6 +14,10 @@ using MauiReactor.Internals;
 using System.Collections.ObjectModel;
 using ReactorData;
 using MauiReactor.Parameters;
+using KeeMind.Controls;
+using CommunityToolkit.Maui.Core;
+using Microsoft.Maui.Devices;
+
 namespace KeeMind.Pages;
 
 class CardsPageState
@@ -71,20 +75,20 @@ partial class CardsPage : Component<CardsPageState>
 
     #region Render
     public override VisualNode Render()
-    {
-        if (Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone)
-        {
-            return new ContentPage
+        => DeviceInfo.Idiom == DeviceIdiom.Phone ?
+            //Mobile layout
+            new ContentPage
             {
+                new StatusBarBehavior()
+                    .StatusBarColor(Theme.Current.WhiteColor)
+                    .StatusBarStyle(StatusBarStyle.DarkContent),
+
                 RenderBody()
             }
-            .Set(MauiControls.NavigationPage.HasNavigationBarProperty, false);
-        }
-        else
-        {
-            return RenderBody();
-        }
-    }
+            .Set(MauiControls.NavigationPage.HasNavigationBarProperty, false)
+            :
+            //Desktop layout
+            RenderBody();
 
     VisualNode RenderBody()
         => Grid("64 Auto *", "*",
@@ -101,7 +105,8 @@ partial class CardsPage : Component<CardsPageState>
                 .VCenter()
                 .BackgroundColor(Colors.Transparent)
                 .Color(Theme.Current.BlackColor)
-        );
+        )
+        .BackgroundColor(Theme.Current.WhiteColor);
 
     CollectionView RenderEntryList()
         => CollectionView()
@@ -110,39 +115,34 @@ partial class CardsPage : Component<CardsPageState>
             .GridRow(2);
 
     VisualNode RenderCardItem(Card cardModel)
-    {
-        //System.Diagnostics.Debug.WriteLine($"RenderCardItem({cardModel.Index})");
-        return new Grid("64", "* Auto 42")
-        {
-            Theme.Current.Label(cardModel.Name ?? string.Empty)
-                .VCenter()
-                .Margin(16,0),
+        => Grid("64", "* Auto 42",
+                Theme.Current.Label(cardModel.Name ?? string.Empty)
+                    .VCenter()
+                    .Margin(16,0),
 
-            new HStack(spacing: 5)
-            {
-                cardModel.Tags.OrderBy(_=>_.Tag.Name).Select(RenderTag)
-            }
-            .HeightRequest(24)
-            .GridColumn(1),
+                HStack(spacing: 5,
+                    [.. cardModel.Tags.OrderBy(_=>_.Tag.Name).Select(RenderTag)]
+                )
+                .HeightRequest(24)
+                .GridColumn(1),
 
-            new Image("right_black.png")
-                .GridColumn(2)
-                .Aspect(Aspect.Center)
-                .VCenter()
-                .HCenter()
-        }
-        .When(State.Cards.IndexOf(cardModel) % 2 == 1, grid => grid.BackgroundColor(Theme.Current.GrayColor))
-        .OnTapped(()=>_onEditCard?.Invoke(cardModel.Id));
-    }
+                Image("right_black.png")
+                    .GridColumn(2)
+                    .Aspect(Aspect.Center)
+                    .VCenter()
+                    .HCenter()
+            )
+            .When(DeviceInfo.Idiom == DeviceIdiom.Phone && State.Cards.IndexOf(cardModel) % 2 == 1, grid => grid.BackgroundColor(Theme.Current.GrayColor))
+            .OnTapped(()=>_onEditCard?.Invoke(cardModel.Id));
+    
 
     VisualNode RenderTag(TagEntry tag)
-    {
-        return Theme.Current.Button(tag.Tag.Name.ToUpper())
+        => Theme.Current.Button(tag.Tag.Name.ToUpper())
             .BackgroundColor(Theme.Current.BlackColor)
             .TextColor(Theme.Current.WhiteColor)
             .FontSize(12)
             .Padding(12, 0);
-    }
+    
 
     VisualNode RenderFavoriteOnlySwitch()
     {
@@ -211,7 +211,7 @@ partial class CardsPage : Component<CardsPageState>
     VisualNode RenderTop()
     {
         return Grid("64", "64 * 64",
-            Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone ?
+            DeviceInfo.Idiom == DeviceIdiom.Phone ?
             Theme.Current.ImageButton("menu_black.png")
                 .Aspect(Aspect.Center)
                 .OnClicked(_onOpenFlyout)
@@ -230,64 +230,3 @@ partial class CardsPage : Component<CardsPageState>
 #endregion
 }
 
-static class CardsListExtensions
-{
-    public static void AddCard(this ObservableCollection<IndexedModel<Card>> list, Card newCard)
-    {
-        bool inserted = false;
-        var newCardModel = new IndexedModel<Card>(newCard, list.Count);
-        for (int i = 0; i < list.Count; i++)
-        {
-            if (string.Compare(list[i].Model.Name, newCard.Name, StringComparison.OrdinalIgnoreCase) > 0)
-            {
-                list.Insert(i, newCardModel);
-                inserted = true;
-                break;
-            }
-        }
-        if (!inserted)
-        {
-            list.Add(newCardModel);
-        }
-    }
-
-    public static void ReplaceCard(this ObservableCollection<IndexedModel<Card>> list, Card editedCard)
-    {
-        for (int i = 0; i < list.Count; i++)
-        {
-            if (list[i].Model.Id == editedCard.Id)
-            {
-                list.RemoveAt(i);
-                break;
-            }
-        }
-
-        bool inserted = false;
-        var newCardModel = new IndexedModel<Card>(editedCard, list.Count);
-        for (int i = 0; i < list.Count; i++)
-        {
-            if (string.Compare(list[i].Model.Name, newCardModel.Model.Name, StringComparison.OrdinalIgnoreCase) > 0)
-            {
-                list.Insert(i, newCardModel);
-                inserted = true;
-                break;
-            }
-        }
-        if (!inserted)
-        {
-            list.Add(newCardModel);
-        }
-    }
-
-    public static void RemoveCard(this ObservableCollection<IndexedModel<Card>> list, int cardToRemoveId)
-    {
-        for (int i = 0; i < list.Count; i++)
-        {
-            if (list[i].Model.Id == cardToRemoveId)
-            {
-                list.RemoveAt(i);
-                break;
-            }
-        }
-    }
-}

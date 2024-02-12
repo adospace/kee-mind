@@ -23,8 +23,8 @@ public partial class Item
 
     public bool IsEmpty() => string.IsNullOrWhiteSpace(Label) && string.IsNullOrWhiteSpace(Value);
 
-    [NotMapped]
-    public EditMode EditMode { get; set; }
+    //[NotMapped]
+    //public EditMode EditMode { get; set; }
 }
 
 

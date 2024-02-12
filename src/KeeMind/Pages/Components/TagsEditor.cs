@@ -50,14 +50,13 @@ partial class TagsEditor : Component<TagsEditorState>
                     new HStack(spacing: 5)
                     {
                         _entries
-                            .Where(_=>_.EditMode != EditMode.Deleted)
                             .Select(RenderTagItem)
                     }
                 }
                 .Orientation(ScrollOrientation.Horizontal)
                 ,
 
-                new BorderlessEntry()
+                Entry()
                     .Text(State.CurrentTagName)
                     .OnTextChanged(text => State.CurrentTagName = text)
                     .OnCompleted(OnAddTag)
@@ -69,16 +68,6 @@ partial class TagsEditor : Component<TagsEditorState>
             }
             .Margin(16)
             .VCenter(),
-
-            //Theme.Current.Button("ADD")
-            //    .HStart()
-            //    .VStart()
-            //    .IsEnabled(()=> !string.IsNullOrWhiteSpace(State.CurrentTagName))
-            //    .OnClicked(OnAddTag)
-            //    .Margin(16, 0, 16,5)
-            //    .IsVisible(_card.ThrowIfNull().Tags.Count < 3)
-            //    .GridColumn(1)
-            //    .VCenter()
         };
     }
 
@@ -96,7 +85,7 @@ partial class TagsEditor : Component<TagsEditorState>
                 .BackgroundColor(Theme.Current.DarkGrayColor)
                 .GridColumnSpan(3),
 
-            new Image("close_white.png")
+            Image("close_white.png")
                 .VCenter()
                 .HCenter()
                 .Margin(5,0,0,0)
@@ -126,7 +115,7 @@ partial class TagsEditor : Component<TagsEditorState>
         {
             if (!allTags.TryGetValue(tagToken, out var tag))
             {
-                tag = new Tag { Name = tagToken, EditMode = EditMode.New };
+                tag = new Tag { Name = tagToken };
 
                 _scopedContext.Add(tag);
             }

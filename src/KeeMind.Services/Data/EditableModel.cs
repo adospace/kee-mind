@@ -6,16 +6,16 @@ using System.Threading.Tasks;
 
 namespace KeeMind.Services.Data;
 
-public enum EditMode
-{
-    None,
+//public enum EditMode
+//{
+//    None,
 
-    New,
+//    New,
 
-    Modified,
+//    Modified,
 
-    Deleted
-}
+//    Deleted
+//}
 
 //public class EditableModel<T> where T : class
 //{

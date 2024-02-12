@@ -17,8 +17,8 @@ public partial class Tag
 
     public ICollection<TagEntry>? Entries { get; }
     
-    [NotMapped]
-    public EditMode EditMode { get; set; }
+    //[NotMapped]
+    //public EditMode EditMode { get; set; }
 }
 
 [Table("TagEntries")]
@@ -31,6 +31,6 @@ public partial class TagEntry
 
     public Card? Card { get; set; }
 
-    [NotMapped]
-    public EditMode EditMode { get; set; }
+    //[NotMapped]
+    //public EditMode EditMode { get; set; }
 }

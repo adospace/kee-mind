@@ -51,15 +51,11 @@ partial class ItemComponent : Component<ItemComponentState>
         }
     }
 
-    VisualNode RenderEditableItem()
-    {
-        ValidateExtensions.ThrowIfNull(_item);
-        return new Grid("*, Auto", "*, Auto")
-        {
-            new VStack(spacing: 0)
-            {
-                new BorderlessEntry()
-                    .When(string.IsNullOrWhiteSpace(_item.Label), _=>_.Placeholder("Label"))
+    VisualNode RenderEditableItem() 
+        => Grid("*, Auto", "*, Auto",
+            VStack(spacing: 0,
+                Entry()
+                    .When(string.IsNullOrWhiteSpace(_item!.Label), _ => _.Placeholder("Label"))
                     .Text(_item.Label ?? string.Empty)
                     .TextColor(Theme.Current.BlackColor)
                     .PlaceholderColor(Theme.Current.MediumGrayColor)
@@ -67,16 +63,11 @@ partial class ItemComponent : Component<ItemComponentState>
                     {
                         _item.Label = newValue;
                         _onUpdate?.Invoke();
-                        //if (_item.EditMode == EditMode.None)
-                        //{
-                        //    _item.EditMode = EditMode.Modified;
-                        //}
                     })
-                    .When(DeviceInfo.Current.Platform == DevicePlatform.iOS || DeviceInfo.Platform == DevicePlatform.MacCatalyst, _=>_.Margin(0,5))
+                    .When(DeviceInfo.Current.Platform == DevicePlatform.iOS || DeviceInfo.Platform == DevicePlatform.MacCatalyst, _ => _.Margin(0, 5))
                     ,
 
-                new Grid("*", "Auto,*")
-                {
+                Grid("*", "Auto,*",
                     Theme.Current.ImageButton(_item.IsMasked ? "lock_close.png" : "lock_open.png")
                         .Aspect(Aspect.Center)
                         .OnClicked(() =>
@@ -84,17 +75,13 @@ partial class ItemComponent : Component<ItemComponentState>
                             _item.IsMasked = !_item.IsMasked;
 
                             _onUpdate?.Invoke();
-                            //if (_item.EditMode == EditMode.None)
-                            //{
-                            //    _item.EditMode = EditMode.Modified;
-                            //}
 
                             Invalidate();
                         })
                         .Margin(0, 0, 4, 0),
 
-                    new BorderlessEntry()
-                        .When(string.IsNullOrWhiteSpace(_item.Value), _=>_.Placeholder("Value"))
+                    Entry()
+                        .When(string.IsNullOrWhiteSpace(_item.Value), _ => _.Placeholder("Value"))
                         .Text(_item.Value ?? string.Empty)
                         .TextColor(Theme.Current.BlackColor)
                         .PlaceholderColor(Theme.Current.MediumGrayColor)
@@ -103,16 +90,12 @@ partial class ItemComponent : Component<ItemComponentState>
                         {
                             _item.Value = newValue;
                             _onUpdate?.Invoke();
-                            //if (_item.EditMode == EditMode.None)
-                            //{
-                            //    _item.EditMode = EditMode.Modified;
-                            //}
                         })
-                        .GridColumn(1),
-                }
+                        .GridColumn(1)
+                )
 
-            }
-                .Margin(16, 0),
+            )
+            .Margin(16, 0),
 
             Theme.Current.ImageButton("delete_black.png")
                 .Aspect(Aspect.Center)
@@ -120,42 +103,36 @@ partial class ItemComponent : Component<ItemComponentState>
                 .GridColumn(1)
                 .Margin(16, 0),
 
-            new Border()                    
+            Border()
                 .HeightRequest(1)
                 .BackgroundColor(Theme.Current.LightGrayColor)
                 .GridRow(1)
                 .GridColumnSpan(2)
-        };
-    }
+        );
 
-    VisualNode RenderReadonlyItem()
-    {
-        ValidateExtensions.ThrowIfNull(_item);
-        return new VStack(spacing: 0)
-        {
-            Theme.Current.Label(_item.Label.ToUpperInvariant())
+    VisualNode RenderReadonlyItem() 
+        => VStack(spacing: 0,
+            Theme.Current.Label(_item!.Label.ToUpperInvariant())
                 .FontSize(14)
-                .Margin(16,0),
+                .Margin(16, 0),
 
-            new Grid("*", "*, Auto")
-            {
-                Theme.Current.Label(()=> !_item.IsMasked ? _item.Value : (State.ShowMaskedValue ? _item.Value : new string('●', _item.Value.Length)))
+            Grid("*", "*, Auto",
+                Theme.Current.Label(() => !_item.IsMasked ? _item.Value : (State.ShowMaskedValue ? _item.Value : new string('●', _item.Value.Length)))
                     .FontAttributes(MauiControls.FontAttributes.Bold)
                     ,
 
                 Theme.Current.ImageButton(() => State.ShowMaskedValue ? "eye_open.png" : "eye_close.png")
                     .Aspect(Aspect.Center)
-                    .OnClicked(()=>SetState(s => s.ShowMaskedValue = !s.ShowMaskedValue, invalidateComponent: false))
+                    .OnClicked(() => SetState(s => s.ShowMaskedValue = !s.ShowMaskedValue, invalidateComponent: false))
                     .GridColumn(1)
                     .Margin(16, 0)
-                    .IsVisible(_item.IsMasked),
-            }
-            .Margin(16,5),
+                    .IsVisible(_item.IsMasked)
+            )
+            .Margin(16, 5),
 
-            new Border()
+            Border()
                 .HeightRequest(1)
-                
-        };
-    }
+
+        );
     #endregion
 }

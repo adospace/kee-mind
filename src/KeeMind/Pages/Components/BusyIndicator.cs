@@ -16,28 +16,26 @@ class BusyIndicatorState
     public double OpacityDiff { get; set; }
 }
 
-class BusyIndicator : Component<BusyIndicatorState>
+partial class BusyIndicator : Component<BusyIndicatorState>
 {
     #region Render
-    public override VisualNode Render()
-    {
-        return new HStack(spacing: 5)
-        {
-            new Ellipse()
+    public override VisualNode Render() 
+        => HStack(spacing: 5,
+            Ellipse()
                 .HeightRequest(16)
                 .WidthRequest(16)
                 .Scale(()=> 0.7 + State.SizeDiff)
                 .Fill(Theme.Current.WhiteColor)
                 .Opacity(()=> 0.7 + State.OpacityDiff),
 
-            new Ellipse()
+            Ellipse()
                 .HeightRequest(16)
                 .WidthRequest(16)
                 .Scale(()=> 1.0 - State.SizeDiff)
                 .Fill(Theme.Current.WhiteColor)
                 .Opacity(()=> 1.0 - State.OpacityDiff),
 
-            new Ellipse()
+            Ellipse()
                 .HeightRequest(16)
                 .WidthRequest(16)
                 .Scale(()=> 0.7 + State.SizeDiff)
@@ -62,9 +60,8 @@ class BusyIndicator : Component<BusyIndicatorState>
                 .RepeatForever()
             }
             .IsEnabled(true)
-        }
-        .HCenter()
-        .VCenter();
-    }
+        )
+        .Center();
     #endregion
 }
+

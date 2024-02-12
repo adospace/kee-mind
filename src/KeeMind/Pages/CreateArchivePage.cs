@@ -32,57 +32,34 @@ class CreateArchivePageState
     public string ConfirmedPIN { get; set; } = string.Empty;
 }
 
-class CreateArchivePage : Component<CreateArchivePageState>
+partial class CreateArchivePage : Component<CreateArchivePageState>
 {
-    #region Initialization
+    [Prop]
     bool _isLocal;
-    Action? _archiveCreatedAction;
 
-    public CreateArchivePage IsLocal(bool isLocal)
-    {
-        _isLocal = isLocal;
-        return this;
-    }
-
-    public CreateArchivePage OnArchiveCreated(Action action)
-    {
-        _archiveCreatedAction = action;
-        return this;
-    }
-    #endregion
+    [Prop]
+    Action? _onArchiveCreated;
 
     #region Render
-    public override VisualNode Render()
-    {
-        return new ContentPage
-        {
+    public override VisualNode Render() 
+        => ContentPage(
             RenderBody()
-        }
+        )
         .WindowTitle("KeeMind")
         .BackgroundColor(Theme.Current.BlackColor);
-    }
 
     VisualNode RenderBody()
-    {
-        switch (State.CurrentStep)
+        => State.CurrentStep switch
         {
-            case CreateArchiveStep.Intro:
-                return RenderIntro();
-            case CreateArchiveStep.Pin:
-            case CreateArchiveStep.PinConfirm:
-                return RenderPinBoard();
-            case CreateArchiveStep.Busy:
-                return RenderIsBusy();
-        }
+            CreateArchiveStep.Intro => RenderIntro(),
+            CreateArchiveStep.Pin or CreateArchiveStep.PinConfirm => RenderPinBoard(),
+            CreateArchiveStep.Busy => CreateArchivePage.RenderIsBusy(),
+            _ => throw new InvalidOperationException(),
+        };
 
-        throw new InvalidOperationException();
-    }
-
-    VisualNode RenderIntro()
-    {
-        return new VerticalStackLayout
-        {
-            new Image("logox.png")
+    VStack RenderIntro() 
+        => VStack(
+            Image("logox.png")
                 .Margin(0,0,0,50)
                 .Aspect(Aspect.Center),
 
@@ -95,24 +72,20 @@ class CreateArchivePage : Component<CreateArchivePageState>
                 .HCenter()
                 .FontSize(24)
                 .OnClicked(()=>SetState(s => s.CurrentStep = CreateArchiveStep.Pin))
-        }
+        )
         .VCenter()
         .Spacing(30);
-    }
 
-    VisualNode RenderPinBoard()
-    {
-        return new Grid("* Auto", "*")
-        {
-            new VerticalStackLayout
-            {
+    Grid RenderPinBoard() 
+        => Grid("* Auto", "*",
+            VStack(
                 new Image("logo.png")
                     .Aspect(Aspect.Center)
                     .Margin(0,30,0,0),
 
                 Theme.Current.H1("Local Archive")
-                    .HCenter(),
-            }
+                    .HCenter()
+            )
             .Spacing(60),
 
 
@@ -120,27 +93,22 @@ class CreateArchivePage : Component<CreateArchivePageState>
                 .Label(State.CurrentStep == CreateArchiveStep.Pin ? "Please create a PIN" : "Please confirm your PIN")
                 .OnPinEntered(pin => Task.Run(async ()=> await OnPinEntered(pin)))
                 .GridRow(1)
-        };
-    }
+        );
 
-    VisualNode RenderIsBusy()
-    {
-        return new Grid("*", "*")
-        {
-            new VStack(spacing:15)
-            {
-                new Image("logox.png")
+    static Grid RenderIsBusy()
+        => Grid("*", "*",
+            VStack(spacing:15,
+                Image("logox.png")
                     .Aspect(Aspect.Center),
 
                 Theme.Current.Label("your password manager")
                     .TextColor(Theme.Current.WhiteColor)
                     .HCenter()
-            }
+            )
             .Margin(0,60,0,0),
 
             new BusyIndicator()
-        };
-    }
+        );
     #endregion
 
     #region Events
@@ -181,7 +149,7 @@ class CreateArchivePage : Component<CreateArchivePageState>
 
         //await repository.TryOpenArchive(State.PIN);
 
-        _archiveCreatedAction?.Invoke();
+        _onArchiveCreated?.Invoke();
     }
     #endregion
 }

@@ -4,7 +4,8 @@
 		<TargetFrameworks>net8.0-android;net8.0-ios;net8.0-maccatalyst</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows10.0.19041.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
-		<RootNamespace>KeeMind</RootNamespace>
+    <UseMaui>true</UseMaui>
+    <RootNamespace>KeeMind</RootNamespace>
 		<SingleProject>true</SingleProject>
     <Nullable>enable</Nullable>
 
@@ -48,9 +49,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Maui" Version="7.0.1" />
     <PackageReference Include="Reactor.Maui" Version="2.0.*" />
-    <PackageReference Include="ReactorData" Version="1.0.6-beta" />
-    <PackageReference Include="ReactorData.EFCore" Version="1.0.6-beta" />
+    <PackageReference Include="ReactorData" Version="1.0.7-beta" />
+    <PackageReference Include="ReactorData.EFCore" Version="1.0.7-beta" />
   </ItemGroup>
   
 	<ItemGroup>

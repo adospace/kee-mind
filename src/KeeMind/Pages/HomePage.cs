@@ -13,43 +13,36 @@ partial class HomePage : Component
 {
     [Prop]
     Action? _onOpenFlyout;
+    private MauiControls.Shell? _shell;
 
-    private MauiControls.NavigationPage? _navigationPage;
+    protected override void OnMounted()
+    {
+        Routing.RegisterRoute<EditCardPage>();
+        
+        base.OnMounted();
+    }
 
 
     #region Render
     public override VisualNode Render()
-    {
-        return new NavigationPage(navigationPage => _navigationPage = navigationPage)
-        {
+        => Shell(shell => _shell = shell,
             new CardsPage()
                 .OnOpenFlyout(_onOpenFlyout)
                 .OnCreateCard(OnAddCard)
                 .OnEditCard(cardId => OnEditCard(cardId))
-        }
-        
-        .BackgroundColor(Theme.Current.WhiteColor);
-    }
+            );
+    
     #endregion
 
     #region Events
     private async void OnAddCard()
     {
-        if (_navigationPage == null)
-        {
-            return;
-        }
-
-        await _navigationPage.Navigation.PushAsync<EditCardPage>();
+        await _shell!.GoToAsync<EditCardPage>();
     }
+
     private async void OnEditCard(int cardId)
     {
-        if (_navigationPage == null)
-        {
-            return;
-        }
-
-        await _navigationPage.Navigation.PushAsync<EditCardPage, EditEntryPageProps>(props => props.CardId = cardId);
+        await _shell!.GoToAsync<EditCardPage, EditEntryPageProps>(props => props.CardId = cardId);
     }
     #endregion
 }

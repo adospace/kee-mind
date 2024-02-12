@@ -14,85 +14,68 @@ class PinBoardState
     public string PIN { get; set; } = string.Empty;
 }
 
-class PinBoard : Component<PinBoardState>
+partial class PinBoard : Component<PinBoardState>
 {
-    #region Initialization
-    private string? _label;
-    private Action<string>? _onPinEnteredAction;
+    [Prop]
+    string? _label;
 
-    public PinBoard Label(string label)
-    {
-        _label = label;
-
-        return this;
-    }
-
-    public PinBoard OnPinEntered(Action<string> onPinEnteredAction)
-    {
-        _onPinEnteredAction = onPinEnteredAction;
-        return this;
-    }
-    #endregion
+    [Prop]
+    Action<string>? _onPinEntered;
 
     #region Render
     public override VisualNode Render()
     {
-        return new Grid("Auto,*", "*")
-        {
-            new VerticalStackLayout
-            {
+        return Grid("Auto,*", "*",
+            VStack(
                 Theme.Current.H2(_label ?? string.Empty)
                     .HCenter(),
 
-                new FlexLayout
-                {
-                    Enumerable.Range(1, 6)
+                FlexLayout(
+                    [.. Enumerable.Range(1, 6)
                         .Select(index=>
                         {
                             bool numberEntered = index <= State.PIN.Length;
 
                             if (numberEntered)
                             {
-                                return (VisualNode)new Grid
-                                {
-                                    new Ellipse()
+                                return (VisualNode)Grid(
+                                    Ellipse()
                                         .HeightRequest(28)
                                         .WidthRequest(28)
                                         .Stroke(Theme.Current.AccentBrush)
                                         .StrokeThickness(1),
-                                    new Ellipse()
+                                    Ellipse()
                                         .HeightRequest(20)
                                         .WidthRequest(20)
                                         .Margin(4)
                                         .Fill(Theme.Current.AccentBrush)
-                                };
+                                );
                             }
 
-                            return new Ellipse()
+                            return Ellipse()
                                 .HeightRequest(28)
                                 .WidthRequest(28)
                                 .Stroke(Theme.Current.AccentBrush)
                                 .StrokeThickness(1);
                         })
-                }
+                        ]
+                )
                 .HCenter()
                 .JustifyContent(Microsoft.Maui.Layouts.FlexJustify.SpaceBetween)
-            }
+            )
             .VEnd()
             .Margin(60)
             .Spacing(20),
 
             RenderKeyboard()
                 .GridRow(1)
-        }
+        )
         .When(Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Desktop, _=>
             _.WidthRequest(480)); //MaxWidthRequest not working under Mac
     }
 
-    Grid RenderKeyboard()
-    {
-        return new Grid("* * * *", "* * *")
-        {
+    Grid RenderKeyboard() 
+        => Grid("* * * *", "* * *",
             RenderKeyboardButton("1", 0, 0),
             RenderKeyboardButton("2", 0, 1),
             RenderKeyboardButton("3", 0, 2),
@@ -113,20 +96,17 @@ class PinBoard : Component<PinBoardState>
                 .BackgroundColor(Theme.Current.BlackColor)
                 .IsVisible(State.PIN.Length > 0)
                 .OnClicked(()=> SetState(s => s.PIN = s.PIN[..^1]))
-        }
+        )
         .Margin(20, 0, 20, 60);
-    }
 
-    VisualNode RenderKeyboardButton(string v, int row, int col)
-    {
-        return Theme.Current.TransparentButton(v)
+    Button RenderKeyboardButton(string v, int row, int col) 
+        => Theme.Current.TransparentButton(v)
             .FontSize(32)
             .HeightRequest(72)
-            .FontAttributes(Microsoft.Maui.Controls.FontAttributes.Bold)
+            .FontAttributes(MauiControls.FontAttributes.Bold)
             .GridRow(row)
             .GridColumn(col)
             .OnClicked(() => NumberEntered(v));
-    }
     #endregion
 
     #region Events
@@ -136,7 +116,7 @@ class PinBoard : Component<PinBoardState>
 
         if (State.PIN.Length == 6)
         {
-            _onPinEnteredAction?.Invoke(State.PIN);
+            _onPinEntered?.Invoke(State.PIN);
             State.PIN = string.Empty;
         }
 

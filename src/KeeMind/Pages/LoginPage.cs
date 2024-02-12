@@ -1,4 +1,6 @@
-﻿using KeeMind.Pages.Components;
+﻿using CommunityToolkit.Maui.Core;
+using KeeMind.Controls;
+using KeeMind.Pages.Components;
 using KeeMind.Resources;
 using KeeMind.Services;
 using KeeMind.Services.Data;
@@ -19,40 +21,36 @@ class LoginPageState
 
 partial class LoginPage : Component<LoginPageState>
 {
-    #region Initialization
     [Prop]
     private Action? _onLoggedIn;
 
-    #endregion
 
     #region Render
-    public override VisualNode Render()
-    {
-        return new ContentPage
-        {
+    public override VisualNode Render() 
+        =>  ContentPage(
+            new StatusBarBehavior()
+                .StatusBarColor(Theme.Current.BlackColor)
+                .StatusBarStyle(StatusBarStyle.LightContent),
+
             RenderBody()
-        }
+        )
         .WindowTitle("KeeMind")
         .BackgroundColor(Theme.Current.BlackColor);
-    }
 
-    VisualNode RenderBody()
-    {
-        return new Grid("* Auto", "*")
-        {
-            new VStack(spacing:15)
-            {
-                new Image("logox.png")
+    Grid RenderBody() 
+        => Grid("* Auto", "*",
+            VStack(spacing:15,
+                Image("logox.png")
                     .Aspect(Aspect.Center),
 
                 State.LoggingIn ?
                 Theme.Current.Label("your password manager")
                     .TextColor(Theme.Current.WhiteColor)
-                    .HCenter() : null,
-            }
+                    .HCenter() : null
+            )
             .Margin(0,60,0,0),
 
-            !State.LoggingIn ? 
+            !State.LoggingIn ?
             new PinBoard()
                 .Label("Enter your PIN")
                 .OnPinEntered(pin =>
@@ -67,31 +65,16 @@ partial class LoginPage : Component<LoginPageState>
                 :
             new BusyIndicator()
                 .GridRowSpan(2)
-        };
-    }
+        );
     #endregion
 
-    #region Render
+    #region Events
     async Task OnPinEntered(string pin)
     {
         var repository = Services.GetRequiredService<IRepository>();
         var db = await repository.TryOpenArchive(pin);
         if (db != null)
         {
-            //List<IndexedModel<Card>> cardList = new();
-            //int cardIndex = 0;
-
-            //await foreach (var card in db.Cards
-            //    .Include(_ => _.Tags)
-            //    .ThenInclude(_ => _.Tag)
-            //    .OrderBy(_ => _.Name)
-            //    .AsAsyncEnumerable())
-            //{
-            //    cardList.Add(new IndexedModel<Card>(card, cardIndex));
-            //    cardIndex++;
-            //}
-
-            //State.LoggingIn = false;
             _onLoggedIn?.Invoke();
         }
         else if (MauiControls.Application.Current != null)

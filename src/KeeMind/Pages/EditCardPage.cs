@@ -36,8 +36,6 @@ class EditEntryPageState
     public bool IsEditing { get; set; }
 
     public IModelContext ScopedContext { get; set; } = default!;
-
-    //public double EntranceTransitionX { get; set; }
 }
 
 class EditEntryPageProps
@@ -50,14 +48,18 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
     [Inject]
     IModelContext _modelContext;
 
+    [Prop]
+    int? _cardId;
+
     #region Initialization
-    private MauiControls.Entry? _titleEntryRef;
 
     protected override void OnMountedOrPropsChanged()
     {
+        var cardId = Props.CardId ?? _cardId;
+
         State.ScopedContext = _modelContext.CreateScope();
 
-        State.Items = State.ScopedContext.Query<Item>(_ => _.OrderBy(x => x.Id == 0 ? int.MaxValue : x.Id));
+        State.Items = State.ScopedContext.Query<Item>(_ => _.OrderBy(x => x.Id));
 
         State.Tags = State.ScopedContext.Query<Tag>(_ => _.OrderBy(x => x.Name));
 
@@ -69,22 +71,27 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
         State.Cards = State.ScopedContext.Query<Card>();
 
-        State.Cards.CollectionChanged += (sender, args) => SetState(s => s.Card = (Card)args.NewItems![0]!);
+        State.Cards.CollectionChanged += (sender, args) =>
+        {
+            if (args.NewItems?.Count == 1)
+            {
+                var newCard = (Card)args.NewItems[0]!;
+                SetState(s => s.Card = newCard);
+            }
+        };
 
         State.ScopedContext.Load<Tag>();
 
-        if (Props.CardId != null)
+        if (cardId != null)
         {
-            //State.ScopedContext.Load<Card>(_ => _.Where(_ => _.Id == Props.CardId).Include(_ => _.Items).Include(x => x.Tags).ThenInclude(x => x.Tag));
-
-            State.ScopedContext.Load<Card>(x => x.Where(_ => _.Id == Props.CardId));
-            State.ScopedContext.Load<Item>(x => x.Where(_ => _.CardId == Props.CardId));
-            State.ScopedContext.Load<TagEntry>(x => x.Where(_ => _.Card!.Id == Props.CardId).Include(_ => _.Tag));
+            State.ScopedContext.Load<Card>(x => x.Where(_ => _.Id == cardId));
+            State.ScopedContext.Load<Item>(x => x.Where(_ => _.CardId == cardId));
+            State.ScopedContext.Load<TagEntry>(x => x.Where(_ => _.Card!.Id == cardId).Include(_ => _.Tag));
         }
         else
         {
             State.ScopedContext.Add(
-                State.Card = new Card { Name = string.Empty, EditMode = EditMode.New },
+                State.Card = new Card { Name = string.Empty },
                 new Item { Card = State.Card, Label = "Email", Value = string.Empty },
                 new Item { Card = State.Card, Label = "Password", Value = string.Empty, IsMasked = true }
                 );
@@ -95,7 +102,6 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
         base.OnMountedOrPropsChanged();
     }
 
-
     #endregion
 
     #region Render
@@ -105,12 +111,9 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
         {
             return new ContentPage
             {
-                State.Card == null ? null :
                 RenderBody()
             }
-            //.TranslationX(State.EntranceTransitionX)
-            //.WithAnimation(easing: Easing.CubicOut, duration: 200)
-            .Set(MauiControls.NavigationPage.HasNavigationBarProperty, false);
+            .Set(MauiControls.Shell.NavBarIsVisibleProperty, false);
         }
         else
         {
@@ -118,9 +121,8 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
         }
     }
 
-    VisualNode RenderBody()
-    {
-        return new Grid("108, *, 24, Auto, Auto", "*")
+    Grid RenderBody() 
+        => State.Card == null ? Grid() : new Grid("108, *, 24, Auto, Auto", "*")
         {
             State.IsEditing ?
             RenderEditingTop()
@@ -133,17 +135,15 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
             RenderTags(),
 
-            State.IsEditing && Props.CardId != null ?
+            State.IsEditing && (_cardId ?? Props.CardId) != null ?
             RenderBottomCommands() : null
-        };
-    }
+        }
+        .BackgroundColor(Theme.Current.WhiteColor);
 
-    VisualNode RenderTop()
-    {
-        return new Grid("108", "64 * 48 64")
-        {
+    Grid RenderTop()
+        => Grid("108", "64 * 48 64",
 
-            Microsoft.Maui.Devices.DeviceInfo.Idiom == Microsoft.Maui.Devices.DeviceIdiom.Phone ?
+            DeviceInfo.Idiom == DeviceIdiom.Phone ?
 
             Theme.Current.ImageButton("back_white.png")
                 .Aspect(Aspect.Center)
@@ -169,85 +169,52 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
                 .GridColumn(3)
-                .OnClicked(()=>SetState(s => s.IsEditing = true)),
-        }
+                .OnClicked(() => SetState(s => s.IsEditing = true))
+        )
         .BackgroundColor(Theme.Current.BlackColor);
-    }
 
-    VisualNode RenderEditingTop()
-    {
-        return new Grid("108", "64 * 64")
-        {
+    Grid RenderEditingTop() 
+        => Grid("108", "64 * 64",
             Theme.Current.ImageButton("close_white.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
-                .OnClicked(OnCancelCard)
-                ,
+                .OnClicked(OnCancelCard),
 
-            new BorderlessEntry(entryRef => _titleEntryRef = entryRef)
+            Entry()
                 .Text(State.Card?.Name ?? string.Empty)
                 .TextColor(Theme.Current.WhiteColor)
+                .BackgroundColor(Theme.Current.BlackColor)                
                 .OnTextChanged(newName =>
                 {
                     State.Card!.Name = newName;
                     State.ScopedContext.Update(State.Card);
-                    //if (State.Card.EditMode == EditMode.None)
-                    //{
-                    //    State.Card.EditMode = EditMode.Modified;
-                    //}                    
                 })
                 .Placeholder("Untitled")
                 .PlaceholderColor(Theme.Current.WhiteColor)
                 .FontSize(18)
                 .GridColumn(1)
                 .VCenter()
-                .HCenter()
-                //.OnLoaded(()=> _titleEntryRef?.Focus())
-                ,
+                .HCenter(),
 
             Theme.Current.ImageButton("confirm_accent.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
                 .GridColumn(2)
-                .OnClicked(SaveCard),
-        }
+                .OnClicked(SaveCard)
+        )
         .BackgroundColor(Theme.Current.BlackColor);
-    }
-
-    //VisualNode RenderItems()
-    //    => new VScrollView
-    //    {
-    //        VStack([..
-    //            State.Items
-    //                .Where(_=>_.EditMode != EditMode.Deleted)
-    //                .Select(RenderItem)
-    //                .Concat(State.IsEditing ?
-    //                new[]
-    //                {
-    //                    Theme.Current.Button("ADD")
-    //                        .HStart()
-    //                        .VStart()
-    //                        .OnClicked(OnAddItem)
-    //                        .BackgroundColor(Theme.Current.DarkGrayColor)
-    //                        .Margin(16, 0)
-    //                }: Array.Empty<VisualNode>())
-    //        ])
-    //        .Spacing(16)
-    //        .Margin(0, 16)
-    //    }
-    //    .GridRow(1);
-
 
     ScrollView RenderItems()
         => VScrollView(
-        
+
             VStack([..
                     State.Items
-                        //.Where(_=>_.EditMode != EditMode.Deleted)
+                        .Where(_ => State.ScopedContext.GetEntityStatus(_) != EntityStatus.Added)
+                        .Concat(State.Items.Where(_ => State.ScopedContext.GetEntityStatus(_) == EntityStatus.Added))
                         .Select(RenderItem)
-                        .Concat(State.IsEditing ?
+                        .Concat(State.IsEditing && !State.Items.Any(_=>string.IsNullOrWhiteSpace(_.Label)) ?
                         [
                             Theme.Current.Button("ADD")
                                 .HStart()
@@ -261,7 +228,6 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             .Spacing(16)
             .Margin(0, 16)
         )
-        .Orientation(ScrollOrientation.Vertical)
         .GridRow(1);
 
     VisualNode RenderItem(Item item)
@@ -282,7 +248,7 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
         return
         [
-            new Label()
+            Label()
                 .BackgroundColor(Theme.Current.LightGrayColor)
                 .TextColor(Theme.Current.BlackColor)
                 .Text("TAGS")
@@ -304,18 +270,17 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
         ];
     }
 
-    VisualNode RenderBottomCommands()
-    {
-        return new Grid("60", "Auto, Auto, *")
-        {
+    Grid RenderBottomCommands() 
+        => Grid("60", "Auto, Auto, *",
             Theme.Current.Button(string.Empty)
                 .HFill()
                 .VFill()
                 .OnClicked(OnRemoveCard)
                 .BackgroundColor(Theme.Current.DarkGrayColor)
-                .GridColumnSpan(3),
+                .GridColumnSpan(3)
+                .CornerRadius(0),
 
-            new Image("delete_white.png")
+            Image("delete_white.png")
                 .VCenter()
                 .HCenter()
                 .Margin(18,0)
@@ -326,27 +291,15 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
                 .VCenter()
                 .TextColor(Theme.Current.WhiteColor)
                 .OnTapped(OnRemoveCard)
-                .GridColumn(1),
-        }
-        .GridRow(4)
-        ;
-    }
+                .GridColumn(1)
+        )
+        .GridRow(4);
     #endregion
 
     #region Events
-    //void OnDeleteItem(Item item)
-    //{
-    //    //item.EditMode = EditMode.Deleted;
-    //    //State.Items.Remove(item);
-    //    State.ModelContext.Delete(item);        
-
-    //    //Invalidate();
-    //}
-
     void OnAddItem()
     {
-        var newItem = new Item() { Card = State.Card, Label = string.Empty, Value = string.Empty, EditMode = EditMode.New };
-        //State.Items.Add(newItem);
+        var newItem = new Item() { Card = State.Card, Label = string.Empty, Value = string.Empty };
 
         State.ScopedContext.Add(newItem);
 
@@ -368,7 +321,9 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
         await State.ScopedContext.Flush();
 
-        _modelContext.Load<Card>(_ => _.Where(_ => _.Id == Props.CardId).Include(x => x.Tags).ThenInclude(x => x.Tag));
+        var cardId = _cardId ?? Props.CardId;
+
+        _modelContext.Load<Card>(_ => _.Where(_ => _.Id == cardId).Include(x => x.Tags).ThenInclude(x => x.Tag));
     }
 
     async void SaveCard()
@@ -393,7 +348,6 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
         {
             if (string.IsNullOrWhiteSpace(item.Label) && string.IsNullOrWhiteSpace(item.Value))
             {
-                //State.Items.Remove(item);
                 State.ScopedContext.Delete(item);
             }
             else if (string.IsNullOrWhiteSpace(item.Label))
@@ -432,21 +386,10 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
         async Task ClosePage()
         {
-            //Props.OnEditCanceled?.Invoke(State.Card);
-
             State.IsClosing = true;
-
-            //Props.OnClose?.Invoke();
 
             await Navigation.PopAsync();
         }
-
-        //if (State.Card.EditMode == EditMode.None && 
-        //    State.Items.All(_ => _.EditMode == EditMode.None))
-        //{
-        //    //await LoadCard();
-        //    return;
-        //}
 
         if (State.Card?.Id == 0 && 
             (State.Items.Count == 0 || State.Items.First().IsEmpty()))
@@ -455,16 +398,18 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             return;
         }
 
+        var cardId = _cardId ?? Props.CardId;
+
         if (!await ContainerPage.DisplayAlert(
-            title: Props.CardId == null ? "Undo Card Creation" : "Cancel Editing", 
-            message: Props.CardId == null ? "Are you sure you want to not add the new card?" : "Are you sure you want to cancel any modifications?", 
+            title: cardId == null ? "Undo Card Creation" : "Cancel Editing", 
+            message: cardId == null ? "Are you sure you want to not add the new card?" : "Are you sure you want to cancel any modifications?", 
             accept: "Cancel", 
-            cancel: Props.CardId == null ? "Back to New Card" : "Back To Edit Card"))
+            cancel: cardId == null ? "Back to New Card" : "Back To Edit Card"))
         {
             return;
         }
 
-        if (Props.CardId == null)
+        if (cardId == null)
         {
             await ClosePage();
         }
@@ -472,7 +417,6 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
         {
             State.ScopedContext.DiscardChanges();
             SetState(s => s.IsEditing = false);
-            //await LoadCard();
         }
     }
 
@@ -495,17 +439,7 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
         async Task ClosePage()
         {
-            State.Card.EditMode = EditMode.Deleted;
-
-            //Props.OnCardRemoved?.Invoke(State.Card);
-            
-            //Props.OnEditCanceled?.Invoke(State.Card);
-
             State.IsClosing = true;
-
-            await _modelContext.Flush();
-
-            //Props.OnClose?.Invoke();
 
             await Navigation.PopAsync();
         }
@@ -523,16 +457,17 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
         State.ScopedContext.Delete(State.Items.ToArray());
         State.ScopedContext.Delete(State.TagEntries.ToArray());
-        State.ScopedContext.Delete(State.Card);
 
         State.ScopedContext.Save();
 
         await State.ScopedContext.Flush();
 
-        //_modelContext.Load<Card>(_ => _.Where(_ => _.Id == Props.CardId).Include(x => x.Tags).ThenInclude(x => x.Tag));
-        //_modelContext.Load<Tag>(_ => _.Where(x => x.Entries!.Any()));
+        _modelContext.Delete(State.Card);
 
-        _modelContext.Load<Card>(_ => _.Where(_ => _.Id == Props.CardId).Include(x => x.Tags).ThenInclude(x => x.Tag));
+        _modelContext.Save();
+
+        await _modelContext.Flush();
+
         _modelContext.Load<Tag>(_ => _.Where(x => x.Entries!.Any()), forceReload: true);
 
         await ClosePage();
@@ -551,8 +486,6 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
         }
 
         State.IsClosing = true;
-
-        //Props.OnClose?.Invoke();
 
         await Navigation.PopAsync();        
     }

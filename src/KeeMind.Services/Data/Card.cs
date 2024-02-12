@@ -22,8 +22,8 @@ public partial class Card
 
     public IList<Attachment>? Attachments { get; set; }
 
-    [NotMapped]
-    public EditMode EditMode { get; set; }
+    //[NotMapped]
+    //public EditMode EditMode { get; set; }
 
 }
 
