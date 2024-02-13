@@ -237,6 +237,7 @@ partial class MainPage : Component<MainPageState>
                     RenderFlyoutBody(),
 
                     new CardsPage()
+                        .SelectedCardId(State.SelectedCardId)
                         .OnEditCard(cardId => SetState(s =>
                         {
                             s.SelectedCardId = cardId;
@@ -252,6 +253,11 @@ partial class MainPage : Component<MainPageState>
                 State.ShowCardEditor ?
                 new EditCardPage()
                     .CardId(State.SelectedCardId)
+                    .OnCardRemoved(() => SetState(s => 
+                    {
+                        s.SelectedCardId = null;
+                        s.ShowCardEditor = false;
+                    }))
                     .GridColumn(2)
                 :null
                 )

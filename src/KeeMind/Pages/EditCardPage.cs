@@ -51,6 +51,9 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
     [Prop]
     int? _cardId;
 
+    [Prop]
+    Action? _onCardRemoved;
+
     #region Initialization
 
     protected override void OnMountedOrPropsChanged()
@@ -437,13 +440,6 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             return;
         }
 
-        async Task ClosePage()
-        {
-            State.IsClosing = true;
-
-            await Navigation.PopAsync();
-        }
-
         if (!await ContainerPage.DisplayAlert(
             title: "Delete Card",
             message: "Are you sure you want to delete the card?",
@@ -470,7 +466,16 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
         _modelContext.Load<Tag>(_ => _.Where(x => x.Entries!.Any()), forceReload: true);
 
-        await ClosePage();
+        if (DeviceInfo.Current.Idiom == DeviceIdiom.Desktop)
+        {
+            _onCardRemoved?.Invoke();
+        }
+        else
+        {
+            State.IsClosing = true;
+
+            await Navigation.PopAsync();
+        }
     }
 
     async void OnBack()

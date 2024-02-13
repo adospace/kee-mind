@@ -45,6 +45,9 @@ partial class CardsPage : Component<CardsPageState>
     [Param]
     IParameter<MainParameters> _mainParameters;
 
+    [Prop]
+    int? _selectedCardId;
+
     protected override void OnMounted()
     {
         _modelContext.Load<Card>(_ => _.Include(x => x.Tags).ThenInclude(x => x.Tag));
@@ -130,10 +133,19 @@ partial class CardsPage : Component<CardsPageState>
                     .GridColumn(2)
                     .Aspect(Aspect.Center)
                     .VCenter()
-                    .HCenter()
-            )
-            .When(DeviceInfo.Idiom == DeviceIdiom.Phone && State.Cards.IndexOf(cardModel) % 2 == 1, grid => grid.BackgroundColor(Theme.Current.GrayColor))
-            .OnTapped(()=>_onEditCard?.Invoke(cardModel.Id));
+                    .HCenter(),
+
+                DeviceInfo.Current.Idiom == DeviceIdiom.Desktop ? 
+                Border()
+                    .HeightRequest(2)
+                    .VEnd()
+                    .BackgroundColor(Theme.Current.DarkGrayColor)
+                    .GridColumnSpan(3)
+                    : null
+            )            
+            .When((DeviceInfo.Idiom == DeviceIdiom.Phone && State.Cards.IndexOf(cardModel) % 2 == 1) || _selectedCardId == cardModel.Id, grid => grid.BackgroundColor(Theme.Current.GrayColor))
+            .OnTapped(()=>_onEditCard?.Invoke(cardModel.Id))
+            ;
     
 
     VisualNode RenderTag(TagEntry tag)
