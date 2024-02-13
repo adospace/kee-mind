@@ -1,4 +1,5 @@
-﻿using MauiReactor;
+﻿using KeeMind.Services.Data;
+using MauiReactor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,6 +40,36 @@ namespace KeeMind.Resources
             .CornerRadius(0)
             .BorderWidth(0)
             ;
+
+
+        public static Grid ClosableButton(string text, bool closeBeforeText, Action closeAction) 
+            => Component.Grid("Auto", closeBeforeText ? "Auto, Auto, *" : "Auto, *, Auto",
+                    Current.Button(string.Empty)
+                        .HFill()
+                        .VFill()
+                        .FontSize(12)
+                        .Padding(2)
+                        .OnClicked(closeAction)
+                        .BackgroundColor(Theme.Current.DarkGrayColor)
+                        .GridColumnSpan(3),
+
+                    new Image("close_white.png")
+                        .VCenter()
+                        .HCenter()
+                        .Margin(5, 0, 0, 0)
+                        .OnTapped(closeAction)
+                        .WidthRequest(10)
+                        .GridColumn(closeBeforeText ? 0 : 1),
+
+                    Current.Label(text)
+                        .VCenter()
+                        .FontSize(12)
+                        .Margin(5, 0)
+                        .TextColor(Theme.Current.WhiteColor)
+                        .OnTapped(closeAction)
+                        .GridColumn(closeBeforeText ? 1 : 0)
+                );
+
 
         public Button ToggleButton(string text, bool selected) => new Button()
             .Text(text)

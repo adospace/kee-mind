@@ -468,6 +468,8 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
         if (DeviceInfo.Current.Idiom == DeviceIdiom.Desktop)
         {
+            State.IsEditing = false;
+
             _onCardRemoved?.Invoke();
         }
         else

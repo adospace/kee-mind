@@ -37,7 +37,7 @@ partial class CardsPage : Component<CardsPageState>
     Action<int>? _onEditCard;
 
     [Prop]
-    Action _onCreateCard;
+    Action? _onCreateCard;
 
     [Inject]
     IModelContext _modelContext;
@@ -93,11 +93,14 @@ partial class CardsPage : Component<CardsPageState>
             //Desktop layout
             RenderBody();
 
+
     VisualNode RenderBody()
-        => Grid("64 Auto *", "*",
+        => Grid("64 Auto Auto *", "*",
             RenderTop(),
 
             RenderTagFilters(),
+
+            RenderFavoriteOnlySwitch(),
 
             RenderEntryList(),
 
@@ -115,7 +118,7 @@ partial class CardsPage : Component<CardsPageState>
         => CollectionView()
             .ItemsSource(State.Cards, RenderCardItem)
             .ItemSizingStrategy(MauiControls.ItemSizingStrategy.MeasureFirstItem)
-            .GridRow(2);
+            .GridRow(3);
 
     VisualNode RenderCardItem(Card cardModel)
         => Grid("64", "* Auto 42",
@@ -156,69 +159,33 @@ partial class CardsPage : Component<CardsPageState>
             .Padding(12, 0);
     
 
-    VisualNode RenderFavoriteOnlySwitch()
-    {
-        return new ScrollView
-        {
-            new HStack(spacing: 5)
-            {
-                _mainParameters.Value.FilterTags
-                    .OrderBy(_=>_.Value.Name)
-                    .Select(RenderFilteredTagItem)
-            }
-        }
-        .Orientation(ScrollOrientation.Horizontal)
-        .Margin(16, 0, 0, 16)
-        .GridRow(1);
-    }
+    VisualNode? RenderFavoriteOnlySwitch()
+        => _mainParameters.Value.ShowFavoritesOnly ?
+            Theme.ClosableButton(
+                text: "SHOW FAVORITES ONLY",
+                closeBeforeText: true,
+                closeAction: () => _mainParameters.Set(p => p.ShowFavoritesOnly = false))
+            .Margin(0, 0, 16, 16)
+            .HEnd()
+            .GridRow(2)
+        : null;
 
-    VisualNode RenderTagFilters()
-    {
-        return new ScrollView
-        {
-            new HStack(spacing: 5)
-            {
-                _mainParameters.Value.FilterTags
+    VisualNode RenderTagFilters() 
+        => HScrollView(
+            HStack(spacing: 5,
+                [.. _mainParameters.Value.FilterTags
                     .OrderBy(_=>_.Value.Name)
-                    .Select(RenderFilteredTagItem)
-            }
-        }
-        .Orientation(ScrollOrientation.Horizontal)
+                    .Select(RenderFilteredTagItem)]
+            )
+        )
         .Margin(16, 0, 0, 16)
         .GridRow(1);
-    }
 
     VisualNode RenderFilteredTagItem(KeyValuePair<int, Tag> tag)
-    {
-        void RemoveTag() => _mainParameters.Set(p => p.FilterTags.Remove(tag.Key));
-
-        return new Grid("Auto", "Auto, Auto, *")
-        {
-            Theme.Current.Button(string.Empty)
-                .HFill()
-                .VFill()
-                .FontSize(12)
-                .Padding(2)
-                .OnClicked(RemoveTag)
-                .BackgroundColor(Theme.Current.DarkGrayColor)
-                .GridColumnSpan(3),
-
-            new Image("close_white.png")
-                .VCenter()
-                .HCenter()
-                .Margin(5,0,0,0)
-                .OnTapped(RemoveTag)
-                .WidthRequest(10),
-
-            Theme.Current.Label(tag.Value.Name.ToUpper())
-                .VCenter()
-                .FontSize(12)
-                .Margin(5,0)
-                .TextColor(Theme.Current.WhiteColor)
-                .OnTapped(RemoveTag)
-                .GridColumn(1),
-        };
-    }
+        => Theme.ClosableButton(
+            text: tag.Value.Name.ToUpper(),
+            closeBeforeText: true,
+            closeAction: () => _mainParameters.Set(p => p.FilterTags.Remove(tag.Key)));
 
     VisualNode RenderTop()
     {

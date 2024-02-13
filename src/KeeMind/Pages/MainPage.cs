@@ -259,7 +259,10 @@ partial class MainPage : Component<MainPageState>
                         s.ShowCardEditor = false;
                     }))
                     .GridColumn(2)
-                :null
+                :
+                Image("background.jpg")
+                    .Aspect(Aspect.AspectFill)
+                    .GridColumn(2)
                 )
             )
             .WindowTitle("KeeMind");

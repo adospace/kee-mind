@@ -46,6 +46,7 @@
 
   <ItemGroup>
     <None Remove="Platforms\Android\Resources\values\styles.xml" />
+    <None Remove="Resources\Images\background.jpg" />
   </ItemGroup>
 
   <ItemGroup>
