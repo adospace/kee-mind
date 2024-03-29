@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <style name="Theme.Transparent" parent="android:Theme">
+  <style name="AppTheme.Transparent" parent="android:Theme">
     <item name="android:background">#33000000</item> <!-- Or any transparency or color you need -->
     <item name="android:windowNoTitle">true</item>
     <item name="android:windowBackground">@android:color/transparent</item>

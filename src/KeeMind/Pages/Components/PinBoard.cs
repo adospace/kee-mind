@@ -27,7 +27,7 @@ partial class PinBoard : Component<PinBoardState>
     {
         return Grid("Auto,*", "*",
             VStack(
-                Theme.Current.H2(_label ?? string.Empty)
+                AppTheme.Current.H2(_label ?? string.Empty)
                     .HCenter(),
 
                 FlexLayout(
@@ -42,20 +42,20 @@ partial class PinBoard : Component<PinBoardState>
                                     Ellipse()
                                         .HeightRequest(28)
                                         .WidthRequest(28)
-                                        .Stroke(Theme.Current.AccentBrush)
+                                        .Stroke(AppTheme.Current.AccentBrush)
                                         .StrokeThickness(1),
                                     Ellipse()
                                         .HeightRequest(20)
                                         .WidthRequest(20)
                                         .Margin(4)
-                                        .Fill(Theme.Current.AccentBrush)
+                                        .Fill(AppTheme.Current.AccentBrush)
                                 );
                             }
 
                             return Ellipse()
                                 .HeightRequest(28)
                                 .WidthRequest(28)
-                                .Stroke(Theme.Current.AccentBrush)
+                                .Stroke(AppTheme.Current.AccentBrush)
                                 .StrokeThickness(1);
                         })
                         ]
@@ -87,20 +87,20 @@ partial class PinBoard : Component<PinBoardState>
             RenderKeyboardButton("9", 2, 2),
             RenderKeyboardButton("0", 3, 1),
 
-            Theme.Current.ImageButton("cancel_white.png")
+            AppTheme.Current.ImageButton("cancel_white.png")
                 .Padding(12)
                 .HeightRequest(72)
                 .Aspect(Aspect.Center)
                 .GridRow(3)
                 .GridColumn(2)
-                .BackgroundColor(Theme.Current.BlackColor)
+                .BackgroundColor(AppTheme.Current.BlackColor)
                 .IsVisible(State.PIN.Length > 0)
                 .OnClicked(()=> SetState(s => s.PIN = s.PIN[..^1]))
         )
         .Margin(20, 0, 20, 60);
 
     Button RenderKeyboardButton(string v, int row, int col) 
-        => Theme.Current.TransparentButton(v)
+        => AppTheme.Current.TransparentButton(v)
             .FontSize(32)
             .HeightRequest(72)
             .FontAttributes(MauiControls.FontAttributes.Bold)

@@ -25,21 +25,21 @@ partial class BusyIndicator : Component<BusyIndicatorState>
                 .HeightRequest(16)
                 .WidthRequest(16)
                 .Scale(()=> 0.7 + State.SizeDiff)
-                .Fill(Theme.Current.WhiteColor)
+                .Fill(AppTheme.Current.WhiteColor)
                 .Opacity(()=> 0.7 + State.OpacityDiff),
 
             Ellipse()
                 .HeightRequest(16)
                 .WidthRequest(16)
                 .Scale(()=> 1.0 - State.SizeDiff)
-                .Fill(Theme.Current.WhiteColor)
+                .Fill(AppTheme.Current.WhiteColor)
                 .Opacity(()=> 1.0 - State.OpacityDiff),
 
             Ellipse()
                 .HeightRequest(16)
                 .WidthRequest(16)
                 .Scale(()=> 0.7 + State.SizeDiff)
-                .Fill(Theme.Current.WhiteColor)
+                .Fill(AppTheme.Current.WhiteColor)
                 .Opacity(() => 0.7 + State.OpacityDiff),
 
             new AnimationController()

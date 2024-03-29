@@ -61,8 +61,8 @@ partial class TagsEditor : Component<TagsEditorState>
                     .OnTextChanged(text => State.CurrentTagName = text)
                     .OnCompleted(OnAddTag)
                     .When(string.IsNullOrWhiteSpace(State.CurrentTagName), _=>_.Placeholder("Enter tags separated by spaces..."))
-                    .TextColor(Theme.Current.BlackColor)
-                    .PlaceholderColor(Theme.Current.MediumGrayColor)
+                    .TextColor(AppTheme.Current.BlackColor)
+                    .PlaceholderColor(AppTheme.Current.MediumGrayColor)
                     .FontSize(20)
                     .IsVisible(_entries.Count < 3),
             }
@@ -76,13 +76,13 @@ partial class TagsEditor : Component<TagsEditorState>
         var removeAction = () => OnRemoveTag(tag);
         return new Grid("Auto", "Auto, Auto, *")
         {
-            Theme.Current.Button(string.Empty)
+            AppTheme.Current.Button(string.Empty)
                 .HFill()
                 .VFill()
                 .FontSize(12)
                 .Padding(2)
                 .OnClicked(removeAction)
-                .BackgroundColor(Theme.Current.DarkGrayColor)
+                .BackgroundColor(AppTheme.Current.DarkGrayColor)
                 .GridColumnSpan(3),
 
             Image("close_white.png")
@@ -92,11 +92,11 @@ partial class TagsEditor : Component<TagsEditorState>
                 .OnTapped(removeAction)
                 .WidthRequest(10),
 
-            Theme.Current.Label(tag.Tag.Name.ToUpper())
+            AppTheme.Current.Label(tag.Tag.Name.ToUpper())
                 .VCenter()
                 .FontSize(12)
                 .Margin(5,0)
-                .TextColor(Theme.Current.WhiteColor)
+                .TextColor(AppTheme.Current.WhiteColor)
                 .OnTapped(removeAction)
                 .GridColumn(1),
         }

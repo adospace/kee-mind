@@ -108,7 +108,7 @@ partial class MainPage : Component<MainPageState>
 
     VisualNode RenderFlyoutBody()
         => Grid("64 128 * 62", "*", 
-            Theme.Current.ImageButton("close_white.png")
+            AppTheme.Current.ImageButton("close_white.png")
                 .Aspect(Aspect.Center)
                 .HStart()
                 .WidthRequest(64)
@@ -125,12 +125,12 @@ partial class MainPage : Component<MainPageState>
                     Image("home_white.png")
                         .HCenter(),
 
-                    Theme.Current.H3("All Cards")
+                    AppTheme.Current.H3("All Cards")
 
                         .GridColumn(1)
                         .VCenter()
                         .Margin(12,0,0,0)
-                        .TextColor(Theme.Current.WhiteColor)
+                        .TextColor(AppTheme.Current.WhiteColor)
                 )
                 .OnTapped(()=> SetState(s =>
                 {
@@ -147,11 +147,11 @@ partial class MainPage : Component<MainPageState>
                     Image("favorites_white.png")
                         .HCenter(),
 
-                    Theme.Current.H3("Favorites")
+                    AppTheme.Current.H3("Favorites")
                         .GridColumn(1)
                         .VCenter()
                         .Margin(12,0,0,0)
-                        .TextColor(Theme.Current.WhiteColor)
+                        .TextColor(AppTheme.Current.WhiteColor)
                 )
                 .OnTapped(()=> SetState(s =>
                 {
@@ -167,10 +167,10 @@ partial class MainPage : Component<MainPageState>
             .VEnd(),
 
             VStack(spacing: 15,
-                Theme.Current.Label("TAGS")
+                AppTheme.Current.Label("TAGS")
                     .GridColumn(1)
                     .VCenter()
-                    .TextColor(Theme.Current.WhiteColor),
+                    .TextColor(AppTheme.Current.WhiteColor),
 
                 FlexLayout([.. State.Tags.Select(RenderFlyoutTagItem)])
                 .Wrap(Microsoft.Maui.Layouts.FlexWrap.Wrap)
@@ -182,23 +182,23 @@ partial class MainPage : Component<MainPageState>
                 Image("gear_white.png")
                     .HCenter(),
 
-                Theme.Current.H3("Settings")
+                AppTheme.Current.H3("Settings")
                     .GridColumn(1)
                     .VCenter()
                     .Margin(12,0,0,0)
-                    .TextColor(Theme.Current.WhiteColor)
+                    .TextColor(AppTheme.Current.WhiteColor)
             )
             .Padding(16,0)
-            .BackgroundColor(Theme.Current.DarkBlackColor)
+            .BackgroundColor(AppTheme.Current.DarkBlackColor)
             .GridRow(3)
         )
-        .BackgroundColor(Theme.Current.BlackColor);
+        .BackgroundColor(AppTheme.Current.BlackColor);
     
 
     VisualNode RenderFlyoutTagItem(Tag tag)
-        =>Theme.Current.Button(tag.Name.ToUpper())
-            .BackgroundColor(Theme.Current.AccentColor)
-            .TextColor(Theme.Current.BlackColor)
+        =>AppTheme.Current.Button(tag.Name.ToUpper())
+            .BackgroundColor(AppTheme.Current.AccentColor)
+            .TextColor(AppTheme.Current.BlackColor)
             .Padding(12, 0)
             .HeightRequest(30)
             .Margin(0, 0, 10, 20)

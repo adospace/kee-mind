@@ -46,7 +46,7 @@ partial class CreateArchivePage : Component<CreateArchivePageState>
             RenderBody()
         )
         .WindowTitle("KeeMind")
-        .BackgroundColor(Theme.Current.BlackColor);
+        .BackgroundColor(AppTheme.Current.BlackColor);
 
     VisualNode RenderBody()
         => State.CurrentStep switch
@@ -63,12 +63,12 @@ partial class CreateArchivePage : Component<CreateArchivePageState>
                 .Margin(0,0,0,50)
                 .Aspect(Aspect.Center),
 
-            Theme.Current.Label("Save your secretes, no account, no internet, no ads, export anytime!")
-                .TextColor(Theme.Current.WhiteColor)
+            AppTheme.Current.Label("Save your secretes, no account, no internet, no ads, export anytime!")
+                .TextColor(AppTheme.Current.WhiteColor)
                 .HCenter()
                 .HorizontalTextAlignment(TextAlignment.Center),
 
-            Theme.Current.TransparentButton("Get started >")
+            AppTheme.Current.TransparentButton("Get started >")
                 .HCenter()
                 .FontSize(24)
                 .OnClicked(()=>SetState(s => s.CurrentStep = CreateArchiveStep.Pin))
@@ -83,7 +83,7 @@ partial class CreateArchivePage : Component<CreateArchivePageState>
                     .Aspect(Aspect.Center)
                     .Margin(0,30,0,0),
 
-                Theme.Current.H1("Local Archive")
+                AppTheme.Current.H1("Local Archive")
                     .HCenter()
             )
             .Spacing(60),
@@ -101,8 +101,8 @@ partial class CreateArchivePage : Component<CreateArchivePageState>
                 Image("logox.png")
                     .Aspect(Aspect.Center),
 
-                Theme.Current.Label("your password manager")
-                    .TextColor(Theme.Current.WhiteColor)
+                AppTheme.Current.Label("your password manager")
+                    .TextColor(AppTheme.Current.WhiteColor)
                     .HCenter()
             )
             .Margin(0,60,0,0),

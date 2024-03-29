@@ -57,8 +57,8 @@ partial class ItemComponent : Component<ItemComponentState>
                 Entry()
                     .When(string.IsNullOrWhiteSpace(_item!.Label), _ => _.Placeholder("Label"))
                     .Text(_item.Label ?? string.Empty)
-                    .TextColor(Theme.Current.BlackColor)
-                    .PlaceholderColor(Theme.Current.MediumGrayColor)
+                    .TextColor(AppTheme.Current.BlackColor)
+                    .PlaceholderColor(AppTheme.Current.MediumGrayColor)
                     .OnTextChanged(newValue =>
                     {
                         _item.Label = newValue;
@@ -68,7 +68,7 @@ partial class ItemComponent : Component<ItemComponentState>
                     ,
 
                 Grid("*", "Auto,*",
-                    Theme.Current.ImageButton(_item.IsMasked ? "lock_close.png" : "lock_open.png")
+                    AppTheme.Current.ImageButton(_item.IsMasked ? "lock_close.png" : "lock_open.png")
                         .Aspect(Aspect.Center)
                         .OnClicked(() =>
                         {
@@ -83,8 +83,8 @@ partial class ItemComponent : Component<ItemComponentState>
                     Entry()
                         .When(string.IsNullOrWhiteSpace(_item.Value), _ => _.Placeholder("Value"))
                         .Text(_item.Value ?? string.Empty)
-                        .TextColor(Theme.Current.BlackColor)
-                        .PlaceholderColor(Theme.Current.MediumGrayColor)
+                        .TextColor(AppTheme.Current.BlackColor)
+                        .PlaceholderColor(AppTheme.Current.MediumGrayColor)
                         .FontSize(20)
                         .OnTextChanged(newValue =>
                         {
@@ -97,7 +97,7 @@ partial class ItemComponent : Component<ItemComponentState>
             )
             .Margin(16, 0),
 
-            Theme.Current.ImageButton("delete_black.png")
+            AppTheme.Current.ImageButton("delete_black.png")
                 .Aspect(Aspect.Center)
                 .OnClicked(_onDelete)
                 .GridColumn(1)
@@ -105,23 +105,23 @@ partial class ItemComponent : Component<ItemComponentState>
 
             Border()
                 .HeightRequest(1)
-                .BackgroundColor(Theme.Current.LightGrayColor)
+                .BackgroundColor(AppTheme.Current.LightGrayColor)
                 .GridRow(1)
                 .GridColumnSpan(2)
         );
 
     VisualNode RenderReadonlyItem() 
         => VStack(spacing: 0,
-            Theme.Current.Label(_item!.Label.ToUpperInvariant())
+            AppTheme.Current.Label(_item!.Label.ToUpperInvariant())
                 .FontSize(14)
                 .Margin(16, 0),
 
             Grid("*", "*, Auto",
-                Theme.Current.Label(() => !_item.IsMasked ? _item.Value : (State.ShowMaskedValue ? _item.Value : new string('●', _item.Value.Length)))
+                AppTheme.Current.Label(() => !_item.IsMasked ? _item.Value : (State.ShowMaskedValue ? _item.Value : new string('●', _item.Value.Length)))
                     .FontAttributes(MauiControls.FontAttributes.Bold)
                     ,
 
-                Theme.Current.ImageButton(() => State.ShowMaskedValue ? "eye_open.png" : "eye_close.png")
+                AppTheme.Current.ImageButton(() => State.ShowMaskedValue ? "eye_open.png" : "eye_close.png")
                     .Aspect(Aspect.Center)
                     .OnClicked(() => SetState(s => s.ShowMaskedValue = !s.ShowMaskedValue, invalidateComponent: false))
                     .GridColumn(1)

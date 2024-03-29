@@ -83,7 +83,7 @@ partial class CardsPage : Component<CardsPageState>
             new ContentPage
             {
                 new StatusBarBehavior()
-                    .StatusBarColor(Theme.Current.WhiteColor)
+                    .StatusBarColor(AppTheme.Current.WhiteColor)
                     .StatusBarStyle(StatusBarStyle.DarkContent),
 
                 RenderBody()
@@ -107,9 +107,9 @@ partial class CardsPage : Component<CardsPageState>
                 .HCenter()
                 .VCenter()
                 .BackgroundColor(Colors.Transparent)
-                .Color(Theme.Current.BlackColor)
+                .Color(AppTheme.Current.BlackColor)
         )
-        .BackgroundColor(Theme.Current.WhiteColor);
+        .BackgroundColor(AppTheme.Current.WhiteColor);
 
     CollectionView RenderEntryList()
         => CollectionView()
@@ -119,7 +119,7 @@ partial class CardsPage : Component<CardsPageState>
 
     VisualNode RenderCardItem(Card cardModel)
         => Grid("64", "* Auto 42",
-                Theme.Current.Label(cardModel.Name ?? string.Empty)
+                AppTheme.Current.Label(cardModel.Name ?? string.Empty)
                     .VCenter()
                     .Margin(16,0),
 
@@ -139,19 +139,19 @@ partial class CardsPage : Component<CardsPageState>
                 Border()
                     .HeightRequest(2)
                     .VEnd()
-                    .BackgroundColor(Theme.Current.DarkGrayColor)
+                    .BackgroundColor(AppTheme.Current.DarkGrayColor)
                     .GridColumnSpan(3)
                     : null
             )            
-            .When((DeviceInfo.Idiom == DeviceIdiom.Phone && State.Cards.IndexOf(cardModel) % 2 == 1) || _selectedCardId == cardModel.Id, grid => grid.BackgroundColor(Theme.Current.GrayColor))
+            .When((DeviceInfo.Idiom == DeviceIdiom.Phone && State.Cards.IndexOf(cardModel) % 2 == 1) || _selectedCardId == cardModel.Id, grid => grid.BackgroundColor(AppTheme.Current.GrayColor))
             .OnTapped(()=>_onEditCard?.Invoke(cardModel.Id))
             ;
     
 
     VisualNode RenderTag(TagEntry tag)
-        => Theme.Current.Button(tag.Tag.Name.ToUpper())
-            .BackgroundColor(Theme.Current.BlackColor)
-            .TextColor(Theme.Current.WhiteColor)
+        => AppTheme.Current.Button(tag.Tag.Name.ToUpper())
+            .BackgroundColor(AppTheme.Current.BlackColor)
+            .TextColor(AppTheme.Current.WhiteColor)
             .FontSize(12)
             .Padding(12, 0);
     
@@ -194,13 +194,13 @@ partial class CardsPage : Component<CardsPageState>
 
         return new Grid("Auto", "Auto, Auto, *")
         {
-            Theme.Current.Button(string.Empty)
+            AppTheme.Current.Button(string.Empty)
                 .HFill()
                 .VFill()
                 .FontSize(12)
                 .Padding(2)
                 .OnClicked(RemoveTag)
-                .BackgroundColor(Theme.Current.DarkGrayColor)
+                .BackgroundColor(AppTheme.Current.DarkGrayColor)
                 .GridColumnSpan(3),
 
             new Image("close_white.png")
@@ -210,11 +210,11 @@ partial class CardsPage : Component<CardsPageState>
                 .OnTapped(RemoveTag)
                 .WidthRequest(10),
 
-            Theme.Current.Label(tag.Value.Name.ToUpper())
+            AppTheme.Current.Label(tag.Value.Name.ToUpper())
                 .VCenter()
                 .FontSize(12)
                 .Margin(5,0)
-                .TextColor(Theme.Current.WhiteColor)
+                .TextColor(AppTheme.Current.WhiteColor)
                 .OnTapped(RemoveTag)
                 .GridColumn(1),
         };
@@ -224,16 +224,16 @@ partial class CardsPage : Component<CardsPageState>
     {
         return Grid("64", "64 * 64",
             DeviceInfo.Idiom == DeviceIdiom.Phone ?
-            Theme.Current.ImageButton("menu_black.png")
+            AppTheme.Current.ImageButton("menu_black.png")
                 .Aspect(Aspect.Center)
                 .OnClicked(_onOpenFlyout)
                 : null,
 
-            Theme.Current.H1("Cards")
-                .TextColor(Theme.Current.BlackColor)
+            AppTheme.Current.H1("Cards")
+                .TextColor(AppTheme.Current.BlackColor)
                 .GridColumn(1).VCenter().HCenter(),
 
-            Theme.Current.ImageButton("plus_black.png")
+            AppTheme.Current.ImageButton("plus_black.png")
                 .Aspect(Aspect.Center)
                 .OnClicked(_onCreateCard)
                 .GridColumn(2)

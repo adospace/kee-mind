@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace KeeMind.Resources
 {
-    abstract class Theme
+    abstract class AppTheme
     {
-        public static Theme Current { get; } = new LightTheme();
+        public static AppTheme Current { get; } = new LightTheme();
 
         public abstract MauiControls.Brush BlackBrush { get; }
         public abstract MauiControls.Brush DarkBlackBrush { get; }
@@ -102,7 +102,7 @@ namespace KeeMind.Resources
             ;
     }
 
-    class LightTheme : Theme
+    class LightTheme : AppTheme
     {
         public override MauiControls.Brush BlackBrush { get; } = new MauiControls.SolidColorBrush(Color.FromArgb("#140D1B"));
         public override MauiControls.Brush DarkBlackBrush { get; } = new MauiControls.SolidColorBrush(Color.FromArgb("#110B17"));

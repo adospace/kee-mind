@@ -25,8 +25,8 @@ partial class TagsViewer : Component
 
     Label RenderTagItem(TagEntry tag) 
         => Label(tag.Tag.Name.ToUpper())
-            .BackgroundColor(Theme.Current.BlackColor)
-            .TextColor(Theme.Current.WhiteColor)
+            .BackgroundColor(AppTheme.Current.BlackColor)
+            .TextColor(AppTheme.Current.WhiteColor)
             .VerticalTextAlignment(TextAlignment.Center)
             .HorizontalTextAlignment(TextAlignment.Center)
             .Padding(12, 0)
