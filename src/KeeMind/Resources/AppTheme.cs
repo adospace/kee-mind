@@ -50,7 +50,7 @@ namespace KeeMind.Resources
                         .FontSize(12)
                         .Padding(2)
                         .OnClicked(closeAction)
-                        .BackgroundColor(Theme.Current.DarkGrayColor)
+                        .BackgroundColor(AppTheme.Current.DarkGrayColor)
                         .GridColumnSpan(3),
 
                     new Image("close_white.png")
@@ -65,7 +65,7 @@ namespace KeeMind.Resources
                         .VCenter()
                         .FontSize(12)
                         .Margin(5, 0)
-                        .TextColor(Theme.Current.WhiteColor)
+                        .TextColor(AppTheme.Current.WhiteColor)
                         .OnTapped(closeAction)
                         .GridColumn(closeBeforeText ? 1 : 0)
                 );

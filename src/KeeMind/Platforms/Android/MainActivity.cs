@@ -29,8 +29,8 @@ public class MainActivity : MauiAppCompatActivity
 
         }
 
-        window.SetStatusBarColor((isLight ? KeeMind.Resources.AppAppTheme.Current.WhiteColor : KeeMind.Resources.AppAppTheme.Current.BlackColor).ToAndroid());
-        window.SetNavigationBarColor((isLight ? KeeMind.Resources.AppAppTheme.Current.WhiteColor : KeeMind.Resources.AppAppTheme.Current.BlackColor).ToAndroid());
+        window.SetStatusBarColor((isLight ? KeeMind.Resources.AppTheme.Current.WhiteColor : KeeMind.Resources.AppTheme.Current.BlackColor).ToAndroid());
+        window.SetNavigationBarColor((isLight ? KeeMind.Resources.AppTheme.Current.WhiteColor : KeeMind.Resources.AppTheme.Current.BlackColor).ToAndroid());
 
         var _ = new WindowInsetsControllerCompat(window, window.DecorView)
         {

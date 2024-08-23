@@ -161,7 +161,7 @@ partial class CardsPage : Component<CardsPageState>
 
     VisualNode? RenderFavoriteOnlySwitch()
         => _mainParameters.Value.ShowFavoritesOnly ?
-            Theme.ClosableButton(
+            AppTheme.ClosableButton(
                 text: "SHOW FAVORITES ONLY",
                 closeBeforeText: true,
                 closeAction: () => _mainParameters.Set(p => p.ShowFavoritesOnly = false))
