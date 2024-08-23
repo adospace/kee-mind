@@ -4,7 +4,7 @@
                android:icon="@mipmap/appicon" 
                android:roundIcon="@mipmap/appicon_round" 
                android:supportsRtl="true"
-               android:theme="@style/Theme.Transparent">
+               android:theme="@style/AppTheme.Transparent">
   </application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
   <uses-permission android:name="android.permission.INTERNET" />

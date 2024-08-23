@@ -29,13 +29,13 @@ partial class LoginPage : Component<LoginPageState>
     public override VisualNode Render() 
         =>  ContentPage(
             new StatusBarBehavior()
-                .StatusBarColor(Theme.Current.BlackColor)
+                .StatusBarColor(AppTheme.Current.BlackColor)
                 .StatusBarStyle(StatusBarStyle.LightContent),
 
             RenderBody()
         )
         .WindowTitle("KeeMind")
-        .BackgroundColor(Theme.Current.BlackColor);
+        .BackgroundColor(AppTheme.Current.BlackColor);
 
     Grid RenderBody() 
         => Grid("* Auto", "*",
@@ -44,8 +44,8 @@ partial class LoginPage : Component<LoginPageState>
                     .Aspect(Aspect.Center),
 
                 State.LoggingIn ?
-                Theme.Current.Label("your password manager")
-                    .TextColor(Theme.Current.WhiteColor)
+                AppTheme.Current.Label("your password manager")
+                    .TextColor(AppTheme.Current.WhiteColor)
                     .HCenter() : null
             )
             .Margin(0,60,0,0),

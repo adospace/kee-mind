@@ -141,44 +141,44 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
             State.IsEditing && (_cardId ?? Props.CardId) != null ?
             RenderBottomCommands() : null
         }
-        .BackgroundColor(Theme.Current.WhiteColor);
+        .BackgroundColor(AppTheme.Current.WhiteColor);
 
     Grid RenderTop()
         => Grid("108", "64 * 48 64",
 
             DeviceInfo.Idiom == DeviceIdiom.Phone ?
 
-            Theme.Current.ImageButton("back_white.png")
+            AppTheme.Current.ImageButton("back_white.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
                 .OnClicked(OnBack)
                 :null,
 
-            Theme.Current.H3(State.Card.Name ?? string.Empty)
+            AppTheme.Current.H3(State.Card.Name ?? string.Empty)
                 .GridColumn(1)
                 .VCenter()
                 .HCenter(),
 
-            Theme.Current.ImageButton(State.Card.IsFavorite ? "favorites_white_fill.png" : "favorites_white.png")
+            AppTheme.Current.ImageButton(State.Card.IsFavorite ? "favorites_white_fill.png" : "favorites_white.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
                 .GridColumn(2)
                 .OnClicked(ToggleFavorite),
 
-            Theme.Current.ImageButton("edit_white.png")
+            AppTheme.Current.ImageButton("edit_white.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
                 .GridColumn(3)
                 .OnClicked(() => SetState(s => s.IsEditing = true))
         )
-        .BackgroundColor(Theme.Current.BlackColor);
+        .BackgroundColor(AppTheme.Current.BlackColor);
 
     Grid RenderEditingTop() 
         => Grid("108", "64 * 64",
-            Theme.Current.ImageButton("close_white.png")
+            AppTheme.Current.ImageButton("close_white.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
@@ -186,28 +186,28 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
             Entry()
                 .Text(State.Card?.Name ?? string.Empty)
-                .TextColor(Theme.Current.WhiteColor)
-                .BackgroundColor(Theme.Current.BlackColor)                
+                .TextColor(AppTheme.Current.WhiteColor)
+                .BackgroundColor(AppTheme.Current.BlackColor)                
                 .OnTextChanged(newName =>
                 {
                     State.Card!.Name = newName;
                     State.ScopedContext.Update(State.Card);
                 })
                 .Placeholder("Untitled")
-                .PlaceholderColor(Theme.Current.WhiteColor)
+                .PlaceholderColor(AppTheme.Current.WhiteColor)
                 .FontSize(18)
                 .GridColumn(1)
                 .VCenter()
                 .HCenter(),
 
-            Theme.Current.ImageButton("confirm_accent.png")
+            AppTheme.Current.ImageButton("confirm_accent.png")
                 .Aspect(Aspect.Center)
                 .HeightRequest(64)
                 .BackgroundColor(Colors.Transparent)
                 .GridColumn(2)
                 .OnClicked(SaveCard)
         )
-        .BackgroundColor(Theme.Current.BlackColor);
+        .BackgroundColor(AppTheme.Current.BlackColor);
 
     ScrollView RenderItems()
         => VScrollView(
@@ -219,11 +219,11 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
                         .Select(RenderItem)
                         .Concat(State.IsEditing && !State.Items.Any(_=>string.IsNullOrWhiteSpace(_.Label)) ?
                         [
-                            Theme.Current.Button("ADD")
+                            AppTheme.Current.Button("ADD")
                                 .HStart()
                                 .VStart()
                                 .OnClicked(OnAddItem)
-                                .BackgroundColor(Theme.Current.DarkGrayColor)
+                                .BackgroundColor(AppTheme.Current.DarkGrayColor)
                                 .Margin(16, 0)
                         ]: [])
                         ]
@@ -252,8 +252,8 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
         return
         [
             Label()
-                .BackgroundColor(Theme.Current.LightGrayColor)
-                .TextColor(Theme.Current.BlackColor)
+                .BackgroundColor(AppTheme.Current.LightGrayColor)
+                .TextColor(AppTheme.Current.BlackColor)
                 .Text("TAGS")
                 .VerticalTextAlignment(TextAlignment.Center)
                 .Padding(16,0)
@@ -275,11 +275,11 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
 
     Grid RenderBottomCommands() 
         => Grid("60", "Auto, Auto, *",
-            Theme.Current.Button(string.Empty)
+            AppTheme.Current.Button(string.Empty)
                 .HFill()
                 .VFill()
                 .OnClicked(OnRemoveCard)
-                .BackgroundColor(Theme.Current.DarkGrayColor)
+                .BackgroundColor(AppTheme.Current.DarkGrayColor)
                 .GridColumnSpan(3)
                 .CornerRadius(0),
 
@@ -290,9 +290,9 @@ partial class EditCardPage : Component<EditEntryPageState, EditEntryPageProps>
                 .OnTapped(OnRemoveCard)
                 .WidthRequest(20),
 
-            Theme.Current.Label("Delete")
+            AppTheme.Current.Label("Delete")
                 .VCenter()
-                .TextColor(Theme.Current.WhiteColor)
+                .TextColor(AppTheme.Current.WhiteColor)
                 .OnTapped(OnRemoveCard)
                 .GridColumn(1)
         )
